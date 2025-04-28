@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import db from "src/db/index.js";
+import db from "../db/index.js";
 import {
 	clientDocuments,
 	clients,
@@ -7,7 +7,7 @@ import {
 	type CreateClient,
 	processedClientData,
 	generatedDocuments,
-} from "src/db/schema.js";
+} from "../db/schema.js";
 
 export async function saveClients(body: CreateClient[]) {
 	const CHUNK_SIZE = 4000;

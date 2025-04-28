@@ -13,7 +13,7 @@ import {
 } from "docx";
 import fs from "node:fs";
 import type { ProcessVisualReportData } from "../db/schema.js";
-import * as ReferenceDataService from "src/reference-datas/service.js";
+import * as ReferenceDataService from "../reference-datas/service.js";
 import path from "node:path";
 
 export async function generateRichDocument({

@@ -8,13 +8,13 @@ import {
 	type Client,
 	type ClientDocument,
 	type CreateClientDocument,
-} from "src/db/schema.js";
+} from "../db/schema.js";
 import createHttpError from "http-errors";
 import path from "node:path";
 import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
-import db from "src/db/index.js";
-import { generateRichDocument } from "src/utils/generate-docx.js";
+import db from "../db/index.js";
+import { generateRichDocument } from "../utils/generate-docx.js";
 
 type ClientData = {
 	"Client #": string;
