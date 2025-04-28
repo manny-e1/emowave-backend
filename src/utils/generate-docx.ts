@@ -24,27 +24,21 @@ export async function generateRichDocument({
 	const imageBuffer = fs.readFileSync(imagePath);
 
 	const [
-		sensoryData,
 		healthData,
-		commonReport,
-		wellnessList,
 		stressTypes,
 		realIntentions,
 		musicalNotes,
-		constructiveAndRestrictive,
 		emotionsListFreqCore,
 		presentCharacters,
+		groupings,
 	] = await Promise.all([
-		ReferenceDataService.getAllSensoryData(),
 		ReferenceDataService.getAllHealthData(),
-		ReferenceDataService.getAllCommonReports(),
-		ReferenceDataService.getAllWellnessList(),
 		ReferenceDataService.getAllStressTypes(),
 		ReferenceDataService.getAllRealIntentions(),
 		ReferenceDataService.getAllMusicalNotes(),
-		ReferenceDataService.getAllConstructiveAndRestrictive(),
 		ReferenceDataService.getAllEmotionsListFreqCore(),
 		ReferenceDataService.getAllPresentCharacters(),
+		ReferenceDataService.getOrganIndicatorGroupingsForDoc(),
 	]);
 
 	const doc = new Document({
@@ -1137,18 +1131,25 @@ export async function generateRichDocument({
 									}),
 								],
 							}),
-							new TableRow({
-								children: [
-									new TableCell({
-										width: { size: 20, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "lorem ipsum" })],
+							...groupings.map(
+								(grouping) =>
+									new TableRow({
+										children: [
+											new TableCell({
+												width: { size: 20, type: WidthType.PERCENTAGE },
+												children: [
+													new Paragraph({ text: grouping.groupHealthArea }),
+												],
+											}),
+											new TableCell({
+												width: { size: 80, type: WidthType.PERCENTAGE },
+												children: [
+													new Paragraph({ text: grouping.explanation }),
+												],
+											}),
+										],
 									}),
-									new TableCell({
-										width: { size: 80, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "lorem ipsum" })],
-									}),
-								],
-							}),
+							),
 						],
 					}),
 					// Section 12: Potential Mental & Physical Wellness Challenge

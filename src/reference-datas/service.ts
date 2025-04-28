@@ -89,3 +89,12 @@ export async function getAllPresentCharacters() {
 		return [];
 	}
 }
+
+export async function getOrganIndicatorGroupingsForDoc() {
+	try {
+		const data = await db.query.organIndicatorGroupings.findMany();
+		return data;
+	} catch (error) {
+		return [];
+	}
+}
