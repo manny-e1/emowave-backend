@@ -12,7 +12,9 @@ type SensoryData = {
 const results: SensoryData[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All_Sensory_Data.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/All_Sensory_Data.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All_Sensory_Data.csv",
 )
 	.pipe(csv())
 	.on("data", (data: SensoryData) => results.push(data))

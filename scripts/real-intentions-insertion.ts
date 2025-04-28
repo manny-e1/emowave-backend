@@ -19,7 +19,9 @@ type RealIntention = {
 const results: RealIntention[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Real Intentions.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/All Real Intentions.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Real Intentions.csv",
 )
 	.pipe(csv())
 	.on("data", (data: RealIntention) => results.push(data))

@@ -23,7 +23,9 @@ type MuscialNote = {
 const results: MuscialNote[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Musical Notes.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/Musical Notes.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Musical Notes.csv",
 )
 	.pipe(csv())
 	.on("data", (data: MuscialNote) => results.push(data))

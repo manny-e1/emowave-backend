@@ -14,7 +14,9 @@ type Wellness = {
 const results: Wellness[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Wellness List.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/Wellness List.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Wellness List.csv",
 )
 	.pipe(csv())
 	.on("data", (data: Wellness) => results.push(data))

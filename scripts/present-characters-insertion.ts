@@ -18,7 +18,9 @@ type PresentCharacter = {
 const results: PresentCharacter[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Present Characters.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/All Present Characters.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Present Characters.csv",
 )
 	.pipe(csv())
 	.on("data", (data: PresentCharacter) => results.push(data))

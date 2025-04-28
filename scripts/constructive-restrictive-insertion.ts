@@ -14,7 +14,9 @@ type ConstructiveAndRestrictive = {
 const results: ConstructiveAndRestrictive[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Constructive and Restrictive.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/Constructive and Restrictive.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Constructive and Restrictive.csv",
 )
 	.pipe(csv())
 	.on("data", (data: ConstructiveAndRestrictive) => results.push(data))

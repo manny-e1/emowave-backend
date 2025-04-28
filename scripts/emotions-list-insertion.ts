@@ -15,7 +15,9 @@ type EmotionFreqCore = {
 const results: EmotionFreqCore[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Emotions List_ Freq _ Core.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/Emotions List_ Freq _ Core.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Emotions List_ Freq _ Core.csv",
 )
 	.pipe(csv())
 	.on("data", (data: EmotionFreqCore) => results.push(data))

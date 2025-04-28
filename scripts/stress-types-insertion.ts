@@ -15,7 +15,9 @@ type StressType = {
 const results: StressType[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Stress Types.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/All Stress Types.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Stress Types.csv",
 )
 	.pipe(csv())
 	.on("data", (data: StressType) => results.push(data))

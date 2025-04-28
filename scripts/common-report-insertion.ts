@@ -15,7 +15,9 @@ type CommonReport = {
 const results: CommonReport[] = [];
 
 fs.createReadStream(
-	"/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Comm Report.csv",
+	process.env.NODE_ENV === "production"
+		? "/home/ubuntu/Comm Report.csv"
+		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Comm Report.csv",
 )
 	.pipe(csv())
 	.on("data", (data: CommonReport) => results.push(data))

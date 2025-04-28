@@ -6,9 +6,10 @@
 	"main": "src/index.ts",
 	"scripts": {
 		"dev": "tsx watch --env-file=.env src/index.ts",
-		"build": "tsc && npm run copy-env",
+		"build": "tsc && npm run copy-env && npm run copy-workers",
 		"start": "node --env-file=.env dist/index.js",
 		"copy-env": "cp .env dist/",
+		"copy-workers": "cp -r src/workers dist/",
 		"db:migrate": "drizzle-kit generate --config=drizzle.config.ts",
 		"db:push": "drizzle-kit push --config=drizzle.config.ts",
 		"studio": "drizzle-kit studio --config=drizzle.config.ts",
