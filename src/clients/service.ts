@@ -129,3 +129,17 @@ export async function getProcessedDocuments(clientId: string) {
 		return [];
 	}
 }
+
+export async function getClientByEmail(email: string) {
+	try {
+		const client = await db.query.clients.findFirst({
+			where: eq(clients.email, email),
+		});
+		if (!client) {
+			return null;
+		}
+		return client;
+	} catch (error) {
+		return null;
+	}
+}

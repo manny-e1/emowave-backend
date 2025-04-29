@@ -1,10 +1,12 @@
 import type { Request, Response } from "express";
 import * as UserService from "./service.js";
 import createHttpError from "http-errors";
-import type { CreateUser, Status, User } from "../db/schema.js";
+import type { CreateAdmin, CreateUser, Status, User } from "../db/schema.js";
 import {
 	generateRandomUuid,
+	hasChangedBefore,
 	isExpired,
+	isSameDay,
 	setTokenExpiry,
 } from "../utils/helpers.js";
 import { message, transport } from "../utils/send-email.js";
@@ -13,19 +15,19 @@ import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { Email } from "./types.js";
 import { createToken, getToken } from "../tokens/service.js";
+import { getClientByEmail } from "../clients/service.js";
+import * as PasswordHistoryService from "../password-history/service.js";
 
-export async function httpCreateUser(
-	req: Request<unknown, unknown, CreateUser>,
+export async function httpCreateAdmin(
+	req: Request<unknown, unknown, CreateAdmin>,
 	res: Response,
 ) {
-	const { email, role, name, password, dob } = req.body;
+	const { email, role, name } = req.body;
 
 	const result = await UserService.createUser({
 		email,
 		role,
 		name,
-		dob: role === "user" ? dob : undefined,
-		password: role === "user" ? await argon2.hash(password || "") : undefined,
 	});
 	if (result.error || !result.user) {
 		if (
@@ -69,6 +71,98 @@ export async function httpCreateUser(
 		);
 	res.status(201).json({ message: "success" });
 }
+
+export async function httpCreateUser(
+	req: Request<unknown, unknown, CreateUser & { otp: number }>,
+	res: Response,
+) {
+	const { email, role, name, password, dob, otp } = req.body;
+	const otpResult = await UserService.getOtp({ email, otp });
+	if (!otpResult) {
+		throw createHttpError("Wrong OTP");
+	}
+	if (isExpired(otpResult.otpExpiry)) {
+		throw createHttpError(
+			"This code has been expired, please request for a new one",
+		);
+	}
+	const client = await getClientByEmail(email);
+	if (!client) {
+		throw createHttpError.NotFound("client with this email is not found");
+	}
+	const hashedPassword = await argon2.hash(password);
+	const result = await UserService.createUser({
+		email,
+		role,
+		name,
+		password: hashedPassword,
+		dob,
+	});
+
+	if (result.error || !result.user) {
+		if (
+			result.error.includes("email address") ||
+			result.error === "invalid id"
+		) {
+			throw createHttpError.BadRequest(result.error);
+		}
+		throw createHttpError(result.error);
+	}
+
+	res.status(201).json({ message: "success" });
+}
+
+export async function httpSendOtp(
+	req: Request<unknown, unknown, { email: string; name: string }>,
+	res: Response,
+) {
+	const { email, name } = req.body;
+	if (!email || !name) {
+		throw createHttpError.BadRequest("email and name are required");
+	}
+	const code = Math.floor(100000 + Math.random() * 900000);
+	const result = await UserService.saveOtp({ email, otp: code });
+	if (result.error) {
+		throw createHttpError(result.error);
+	}
+	const msg = message({
+		token: code.toString(),
+		email: email,
+		subject: "Registration OTP",
+		name: name,
+		reset: false,
+		reason: "otp",
+	});
+	transport
+		.sendMail(msg)
+		.then(async () => {
+			console.info(`registration otp email sent to user with address ${email}`);
+		})
+		.catch((err: Error) =>
+			console.error(`sending registration otp email for ${email} failed`, err),
+		);
+	res.status(200).json({ message: "success" });
+}
+
+// export async function httpVerifyOtp(
+// 	req: Request<unknown, unknown, { email: string; otp: string }>,
+// 	res: Response,
+// ) {
+// 	const { email, otp } = req.body;
+// 	if (!email || !otp) {
+// 		throw createHttpError.BadRequest("email and otp are required");
+// 	}
+// 	const result = await UserService.getOtp({ email, otp: Number(otp) });
+// 	if (!result) {
+// 		throw createHttpError("Wrong OTP");
+// 	}
+// 	if (isExpired(result.otpExpiry)) {
+// 		throw createHttpError(
+// 			"This code has been expired, please request for a new one",
+// 		);
+// 	}
+// 	res.status(200).json({ message: "OTP verified successfully" });
+// }
 
 export async function httpGetAdminUsers(req: Request, res: Response) {
 	const result = await UserService.getAdminUsers();
@@ -124,8 +218,31 @@ export async function httpLogin(
 	const verify = user.password
 		? await argon2.verify(user.password, password)
 		: false;
-
+	const trailsResult = await UserService.getWrongPasswordTrials(user.id);
+	let trailCount = 0;
+	if (!trailsResult.error) {
+		const trials = trailsResult.trails;
+		const today = new Date();
+		if (trials) {
+			for (const trail of trials) {
+				if (isSameDay(today, trail.createdAt)) {
+					trailCount += 1;
+				}
+			}
+		}
+	}
+	if (!verify && trailCount >= 2) {
+		await UserService.addWrongPasswordTrial(user.id);
+		await UserService.changeUserStatus({
+			id: user.id,
+			status: "locked",
+		});
+		throw createHttpError.Unauthorized(
+			"You have reached maximum invalid login and your account is locked",
+		);
+	}
 	if (!verify) {
+		await UserService.addWrongPasswordTrial(user.id);
 		throw createHttpError.Unauthorized("invalid credentials");
 	}
 
@@ -181,13 +298,24 @@ export async function httpChangeUserStatus(
 		email,
 		status,
 	});
-	if (result.error) {
+	if (result.error || !result.id) {
 		if (result.error === "update failed") {
 			throw createHttpError.NotFound(
 				"Couldn't change the user status, make sure the user id/email is valid",
 			);
 		}
-		throw createHttpError(result.error);
+		throw createHttpError(result.error || "");
+	}
+	if (status === "active") {
+		const result2 = await UserService.deleteWrongPassTrials(result.id);
+		if (result2.error) {
+			if (result2.error === "invalid id") {
+				throw createHttpError.NotFound(
+					"failed to delete the user's wrong password trials, make sure the user id is valid",
+				);
+			}
+			throw createHttpError(result2.error);
+		}
 	}
 	res.status(200).json({ message: "success" });
 }
@@ -388,6 +516,36 @@ export async function httpResetPassword(
 	let user: Omit<User, "password" | "createdAt" | "updatedAt"> | undefined =
 		undefined;
 	user = (await UserService.getUser(userId, true)).user;
+	const result = await PasswordHistoryService.getPasswordHistory(userId);
+	if (result.error || !result.pwdHistory) {
+		if (result.error === "invalid id") {
+			throw createHttpError.BadRequest(result.error);
+		}
+		throw createHttpError(result.error);
+	}
+	const pwdHistory = result.pwdHistory;
+	const changedBefore = await hasChangedBefore(pwdHistory, password);
+	if (changedBefore) {
+		throw createHttpError.BadRequest(
+			"You can’t reuse old password. Please enter new password",
+		);
+	}
+
+	if (src !== "activate") {
+		let todayChangeCount = 0;
+		const today = new Date();
+		for (const history of pwdHistory.filter((pwd) => pwd.source === "reset")) {
+			if (isSameDay(today, history.createdAt)) {
+				todayChangeCount++;
+			}
+		}
+
+		if (todayChangeCount >= 2) {
+			throw createHttpError.BadRequest(
+				"You’ve exceeded the number of times password update per day. Please try again tomorrow",
+			);
+		}
+	}
 
 	if (isActivate) {
 		const result = await UserService.changeUserStatus({

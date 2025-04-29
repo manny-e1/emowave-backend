@@ -1,10 +1,15 @@
 import { and, desc, eq } from "drizzle-orm";
 import db from "../db/index.js";
-import { loginSessions, users } from "../db/schema.js";
-import type { CreateUser, LoginSession, Status } from "../db/schema.js";
+import {
+	loginSessions,
+	otps,
+	users,
+	wrongPasswordTrial,
+} from "../db/schema.js";
+import type { CreateAdmin, LoginSession, Status } from "../db/schema.js";
 // import { logger } from '@/logger.js';
 
-export async function createUser(body: CreateUser) {
+export async function createUser(body: CreateAdmin) {
 	try {
 		const newUser = await db
 			.insert(users)
@@ -278,6 +283,78 @@ export async function logoutUser({
 	} catch (error) {
 		// logger.error(error);
 		const err = error as Error;
+		return { error: err.message };
+	}
+}
+
+export async function saveOtp({
+	email,
+	otp,
+	expiresAt = new Date(Date.now() + 15 * 60 * 1000),
+}: {
+	email: string;
+	otp: number;
+	expiresAt?: Date;
+}) {
+	try {
+		await db
+			.insert(otps)
+			.values({ userEmail: email, otp, otpExpiry: expiresAt });
+
+		return { message: "success" };
+	} catch (error) {
+		// logger.error(error);
+		const err = error as Error;
+		return { error: err.message };
+	}
+}
+export async function getOtp({ otp, email }: { otp: number; email: string }) {
+	try {
+		const result = await db.query.otps.findFirst({
+			where: and(eq(otps.userEmail, email), eq(otps.otp, otp)),
+			orderBy: desc(otps.createdAt),
+		});
+		if (!result) {
+			return null;
+		}
+		return result;
+	} catch (error) {
+		return null;
+	}
+}
+
+export async function addWrongPasswordTrial(id: string) {
+	try {
+		await db.insert(wrongPasswordTrial).values({ userId: id });
+		return { message: "success" };
+	} catch (error) {
+		return { error: (error as Error).message };
+	}
+}
+
+export async function getWrongPasswordTrials(id: string) {
+	try {
+		const trails = await db
+			.select()
+			.from(wrongPasswordTrial)
+			.where(eq(wrongPasswordTrial.userId, id));
+		return { trails };
+	} catch (error) {
+		return { error: (error as Error).message };
+	}
+}
+
+export async function deleteWrongPassTrials(id: string) {
+	try {
+		await db
+			.delete(wrongPasswordTrial)
+			.where(and(eq(wrongPasswordTrial.userId, id)));
+		return { message: "success" };
+	} catch (error) {
+		const err = error as Error;
+		if (err.message.includes("invalid input syntax for type uuid")) {
+			return { error: "invalid id" };
+		}
 		return { error: err.message };
 	}
 }

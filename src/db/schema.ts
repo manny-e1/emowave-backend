@@ -46,7 +46,11 @@ export const users = pgTable(
 );
 
 export type User = typeof users.$inferSelect;
-export type CreateUser = typeof users.$inferInsert;
+export type CreateAdmin = typeof users.$inferInsert;
+export type CreateUser = Omit<typeof users.$inferInsert, "password" | "dob"> & {
+	dob: string;
+	password: string;
+};
 export type Status = Pick<User, "status">["status"];
 export type Role = Pick<User, "role">["role"];
 
@@ -59,6 +63,16 @@ export const tokens = pgTable("tokens", {
 	tokenExpiry: timestamp("token_expiry").notNull(),
 });
 export type CreateToken = typeof tokens.$inferInsert;
+
+//otps
+export const otps = pgTable("otps", {
+	userEmail: varchar("user_email", { length: 256 }).notNull(),
+	otp: integer("otp").notNull(),
+	otpExpiry: timestamp("otp_expiry").notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+export type CreateOtp = typeof otps.$inferInsert;
+export type Otp = typeof otps.$inferSelect;
 
 //login_session
 export const loginSessions = pgTable("login_sessions", {
@@ -75,6 +89,34 @@ export const loginSessions = pgTable("login_sessions", {
 });
 
 export type LoginSession = typeof loginSessions.$inferSelect;
+
+//password_history
+export const passwordHistory = pgTable("password_history", {
+	id: serial("id").primaryKey(),
+	userId: uuid("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	source: varchar({ enum: ["reset", "activation", "login"] }).notNull(),
+	password: varchar("password", { length: 256 }).notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at")
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
+});
+
+export type PasswordHistory = typeof passwordHistory.$inferInsert;
+export type Source = PasswordHistory["source"];
+
+//Wrong_password_trail
+export const wrongPasswordTrial = pgTable("wrong_password_trials", {
+	id: serial("id").primaryKey(),
+	userId: uuid("user_id")
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" })
+		.notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});
 
 //clients
 export const clients = pgTable(

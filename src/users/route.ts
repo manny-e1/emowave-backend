@@ -11,15 +11,17 @@ const router = Router();
 
 router
 	.route("/")
-	// .all(errorCatcher(isAuthenticated), errorCatcher(isAdmin))
-	.post(errorCatcher(UserController.httpCreateUser))
+	.all(errorCatcher(isAuthenticated), errorCatcher(isAdmin))
+	.post(errorCatcher(UserController.httpCreateAdmin))
 	.get(errorCatcher(UserController.httpGetAdminUsers));
-router.get(
-	"/normal",
-	// errorCatcher(isAuthenticated),
-	// errorCatcher(isAdmin),
-	errorCatcher(UserController.httpGetNormalUsers),
-);
+router
+	.route("/normal")
+	.post(errorCatcher(UserController.httpCreateUser))
+	.get(
+		errorCatcher(isAuthenticated),
+		errorCatcher(isAdmin),
+		errorCatcher(UserController.httpGetNormalUsers),
+	);
 router.post("/login", errorCatcher(UserController.httpLogin));
 router.patch("/activate", errorCatcher(UserController.httpActivateUser));
 router.post(
@@ -37,6 +39,8 @@ router.patch(
 	errorCatcher(isAdmin),
 	errorCatcher(UserController.httpChangeUserStatus),
 );
+router.post("/send-otp", errorCatcher(UserController.httpSendOtp));
+// router.post("/verify-otp", errorCatcher(UserController.httpVerifyOtp));
 
 router.post(
 	"/resend-email",
@@ -56,4 +60,5 @@ router
 	.get(errorCatcher(UserController.httpGetUser))
 	.put(errorCatcher(UserController.httpEditUser))
 	.delete(errorCatcher(UserController.httpDeleteUser));
+
 export { router as userRouter };

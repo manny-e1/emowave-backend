@@ -3,6 +3,7 @@ import { resetPasswordEmailTemplate } from "./reset-password-email-template.js";
 import { activationEmailTemplate } from "./activation-email-template.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { registrationOTPEmailTemplate } from "./registration-otp-email-template.js";
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -14,12 +15,14 @@ const message = ({
 	token,
 	name,
 	reset,
+	reason,
 }: {
 	email: string;
 	subject: string;
 	token: string;
 	name: string;
 	reset: boolean;
+	reason?: "reset" | "activation" | "otp";
 }) => {
 	const pwdReset = resetPasswordEmailTemplate({
 		link: `${process.env.FRONT_END_URL}/change-password?token=${token}`,
@@ -37,12 +40,17 @@ const message = ({
 		name,
 		email,
 	});
+	const otpEmail = registrationOTPEmailTemplate({
+		code: Number.parseInt(token),
+		name,
+		email,
+	});
 	return {
 		from: process.env.EMAIL_FROM,
 		to: email,
 		subject: subject,
 		text: "For clients with plaintext support only",
-		html: reset ? pwdReset : accActivation,
+		html: reason === "otp" ? otpEmail : reset ? pwdReset : accActivation,
 	};
 };
 // const msg = {

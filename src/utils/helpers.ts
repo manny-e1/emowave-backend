@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import type { Request } from "express";
 import { URLSearchParams } from "node:url";
 import argon2 from "argon2";
+import type { PasswordHistory } from "src/db/schema.js";
 // import validator from 'validator';
 
 export function IsJsonString(str: string) {
@@ -28,6 +29,37 @@ export function isExpired(d1: Date) {
 export function setTokenExpiry() {
 	const d = new Date();
 	return new Date(d.setMinutes(d.getMinutes() + 30));
+}
+
+export function isSameDay(d1: Date, d2: Date) {
+	const d1Str = d1.toISOString().split("T")[0];
+	const d2Str = d2.toISOString().split("T")[0];
+
+	return d1Str === d2Str;
+}
+
+export function isMoreThan60DaysAfter(date: Date): boolean {
+	const currentDate = new Date();
+	const diffInTime = currentDate.getTime() - date.getTime();
+	const diffInDays = diffInTime / (1000 * 3600 * 24);
+	return diffInDays > 60;
+}
+
+export async function hasChangedBefore(
+	pwdHistory: PasswordHistory[],
+	password: string,
+) {
+	let hasChangedBefore = false;
+	const one2Five = pwdHistory.slice(0, 5);
+	for (let index = 0; index < one2Five.length; index++) {
+		const history = pwdHistory[index];
+		const verified = await argon2.verify(history.password, password);
+		if (verified) {
+			hasChangedBefore = true;
+			break;
+		}
+	}
+	return hasChangedBefore;
 }
 
 // export function sanitizeValues(obj: Record<string, any>) {
