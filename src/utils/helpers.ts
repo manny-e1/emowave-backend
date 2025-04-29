@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import type { Request } from "express";
 import { URLSearchParams } from "node:url";
 import argon2 from "argon2";
-import type { PasswordHistory } from "src/db/schema.js";
+import type { PasswordHistory } from "../db/schema.js";
 // import validator from 'validator';
 
 export function IsJsonString(str: string) {
