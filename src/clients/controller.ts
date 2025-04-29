@@ -15,6 +15,10 @@ import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 import db from "../db/index.js";
 import { generateRichDocument } from "../utils/generate-docx.js";
+import {
+	type Condition,
+	parseAndExtractIDNReport,
+} from "src/utils/parse-and-extract-idn-report.js";
 
 type ClientData = {
 	"Client #": string;
@@ -119,53 +123,78 @@ export async function httpSaveClientDocument(
 	if (result.error) {
 		throw createHttpError(result.error);
 	}
-	const worker = new Worker(path.join(__dirname, "/workers/process-pdf.js"), {
-		workerData: {
-			filePath: documentData[0].documentPath,
-			clientId: req.params.id,
-			documentName: documentData[0].documentName,
-		},
-	});
-	// Optional: Listen for messages from the worker (e.g., for logging)
-	worker.on("message", async (message) => {
-		if (message.success) {
-			console.log(
-				`Worker completed for client ${req.params.id}: ${message.extractedData}`,
-			);
-			await db.insert(processedClientData).values({
+	const filePaths = documentData
+		.map((doc) => {
+			const ext = path.extname(doc.documentName).toLowerCase().slice(1);
+			if (ext === "pdf" || ext === "txt") {
+				return {
+					ext,
+					path: doc.documentPath,
+					name: doc.documentName,
+				};
+			}
+			return undefined;
+		})
+		.filter((d) => d !== undefined);
+	const idnReport = filePaths.find((f) => f.ext === "txt");
+	const visualReport = filePaths.find((f) => f.ext === "pdf");
+	if (visualReport) {
+		const worker = new Worker(path.join(__dirname, "/workers/process-pdf.js"), {
+			workerData: {
+				filePath: visualReport.path,
 				clientId: req.params.id,
-				visualReportDocumentName: documentData[0].documentName,
-				visualReportData: message.extractedData,
-			});
-			const uploadPath = await generateRichDocument({
-				documentName: documentData[0].documentName,
-				parsedData: message.extractedData,
-			});
-			await db.insert(generatedDocuments).values({
-				clientId: req.params.id,
-				name: documentData[0].documentName,
-				path: uploadPath,
-			});
-		} else {
-			console.error(
-				`Worker failed for client ${req.params.id}: ${message.error}`,
-			);
-		}
-	});
+				documentName: visualReport.name,
+			},
+		});
+		// Optional: Listen for messages from the worker (e.g., for logging)
+		worker.on("message", async (message) => {
+			if (message.success) {
+				console.log(
+					`Worker completed for client ${req.params.id}: ${message.extractedData}`,
+				);
+				let conditions: Condition[] | null = null;
+				if (idnReport) {
+					conditions = await parseAndExtractIDNReport(idnReport.path);
+				}
+				await db.insert(processedClientData).values({
+					clientId: req.params.id,
+					visualReportDocumentName: visualReport.name,
+					visualReportData: message.extractedData,
+					idnData: conditions,
+					idnReportDocumentName: idnReport?.name,
+				});
+				const uploadPath = await generateRichDocument({
+					documentName: visualReport.name,
+					parsedData: message.extractedData,
+				});
+				await db.insert(generatedDocuments).values({
+					clientId: req.params.id,
+					name: visualReport.name,
+					path: uploadPath,
+				});
+			} else {
+				console.error(
+					`Worker failed for client ${req.params.id}: ${message.error}`,
+				);
+			}
+		});
 
-	// Optional: Handle worker errors
-	worker.on("error", (error) => {
-		console.error(`Worker error for client ${req.params.id}: ${error.message}`);
-	});
-
-	// Optional: Log when the worker thread exits
-	worker.on("exit", (code) => {
-		if (code !== 0) {
+		// Optional: Handle worker errors
+		worker.on("error", (error) => {
 			console.error(
-				`Worker for client ${req.params.id} exited with code ${code}`,
+				`Worker error for client ${req.params.id}: ${error.message}`,
 			);
-		}
-	});
+		});
+
+		// Optional: Log when the worker thread exits
+		worker.on("exit", (code) => {
+			if (code !== 0) {
+				console.error(
+					`Worker for client ${req.params.id} exited with code ${code}`,
+				);
+			}
+		});
+	}
 
 	res.status(200).json(result);
 }
