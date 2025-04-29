@@ -18,7 +18,7 @@ import { generateRichDocument } from "../utils/generate-docx.js";
 import {
 	type Condition,
 	parseAndExtractIDNReport,
-} from "src/utils/parse-and-extract-idn-report.js";
+} from "../utils/parse-and-extract-idn-report.js";
 
 type ClientData = {
 	"Client #": string;
