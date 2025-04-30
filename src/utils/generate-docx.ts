@@ -48,7 +48,7 @@ export async function generateRichDocument({
 				children: [
 					// Section 1: Your Stress Level
 					new Paragraph({
-						text: "1. Your Stress Level",
+						children: [new TextRun({ text: "1. Your Stress Level", size: 22 })],
 						heading: HeadingLevel.HEADING_1,
 						spacing: { after: 200 },
 					}),
@@ -60,7 +60,13 @@ export async function generateRichDocument({
 									new TableCell({
 										columnSpan: 2,
 										width: { size: 100, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Stress Level Score" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Stress Level Score", size: 18 }),
+												],
+											}),
+										],
 									}),
 								],
 							}),
@@ -71,25 +77,12 @@ export async function generateRichDocument({
 										width: { size: 100, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.stress_level.score,
-											}),
-										],
-									}),
-								],
-							}),
-							new TableRow({
-								children: [
-									new TableCell({
-										columnSpan: 1,
-										width: { size: 50, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Description" })],
-									}),
-									new TableCell({
-										columnSpan: 1,
-										width: { size: 50, type: WidthType.PERCENTAGE },
-										children: [
-											new Paragraph({
-												text: "Indicator",
+												children: [
+													new TextRun({
+														text: parsedData.stress_level.score,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -102,7 +95,9 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.stress_level.description,
+												children: [
+													new TextRun({ text: "Description", size: 18 }),
+												],
 											}),
 										],
 									}),
@@ -111,13 +106,49 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: stressTypes.find(
-													(data) =>
-														Number.parseFloat(parsedData.stress_level.score) >=
-															data.stressFrom &&
-														Number.parseFloat(parsedData.stress_level.score) <=
-															data.stressTo,
-												)?.indicator,
+												children: [
+													new TextRun({ text: "Indicator", size: 18 }),
+												],
+											}),
+										],
+									}),
+								],
+							}),
+							new TableRow({
+								children: [
+									new TableCell({
+										columnSpan: 1,
+										width: { size: 50, type: WidthType.PERCENTAGE },
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: parsedData.stress_level.description,
+														size: 18,
+													}),
+												],
+											}),
+										],
+									}),
+									new TableCell({
+										columnSpan: 1,
+										width: { size: 50, type: WidthType.PERCENTAGE },
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: stressTypes.find(
+															(data) =>
+																Number.parseFloat(
+																	parsedData.stress_level.score,
+																) >= data.stressFrom &&
+																Number.parseFloat(
+																	parsedData.stress_level.score,
+																) <= data.stressTo,
+														)?.indicator,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -128,7 +159,9 @@ export async function generateRichDocument({
 
 					// Section 2: Your Emotional State
 					new Paragraph({
-						text: "2. Your Emotional State",
+						children: [
+							new TextRun({ text: "2. Your Emotional State", size: 22 }),
+						],
 						heading: HeadingLevel.HEADING_1,
 						spacing: { before: 400, after: 200 },
 					}),
@@ -139,13 +172,24 @@ export async function generateRichDocument({
 								children: [
 									new TableCell({
 										width: { size: 50, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Empowering" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Empowering", size: 18 }),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: "Your Positive Emotion",
+												children: [
+													new TextRun({
+														text: "Your Positive Emotion",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -158,7 +202,12 @@ export async function generateRichDocument({
 											width: { size: 50, type: WidthType.PERCENTAGE },
 											children: [
 												new Paragraph({
-													text: item,
+													children: [
+														new TextRun({
+															text: item,
+															size: 18,
+														}),
+													],
 												}),
 											],
 										}),
@@ -166,10 +215,15 @@ export async function generateRichDocument({
 											width: { size: 50, type: WidthType.PERCENTAGE },
 											children: [
 												new Paragraph({
-													text:
-														musicalNotes.find(
-															(data) => data.empowering === item,
-														)?.positiveEmotions ?? "",
+													children: [
+														new TextRun({
+															text:
+																musicalNotes.find(
+																	(data) => data.empowering === item,
+																)?.positiveEmotions ?? "",
+															size: 18,
+														}),
+													],
 												}),
 											],
 										}),
@@ -181,7 +235,7 @@ export async function generateRichDocument({
 					new Paragraph({
 						text: "",
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 400, after: 200 },
+						spacing: { before: 100, after: 100 },
 					}),
 					new Table({
 						width: { size: 100, type: WidthType.PERCENTAGE },
@@ -190,13 +244,27 @@ export async function generateRichDocument({
 								children: [
 									new TableCell({
 										width: { size: 50, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Dis-empowering" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Disempowering",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: "Your Negative Emotion",
+												children: [
+													new TextRun({
+														text: "Your Negative Emotion",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -209,7 +277,12 @@ export async function generateRichDocument({
 											width: { size: 50, type: WidthType.PERCENTAGE },
 											children: [
 												new Paragraph({
-													text: item,
+													children: [
+														new TextRun({
+															text: item,
+															size: 18,
+														}),
+													],
 												}),
 											],
 										}),
@@ -217,10 +290,15 @@ export async function generateRichDocument({
 											width: { size: 50, type: WidthType.PERCENTAGE },
 											children: [
 												new Paragraph({
-													text:
-														musicalNotes.find(
-															(data) => data.disempowering === item,
-														)?.negativeEmotions ?? "",
+													children: [
+														new TextRun({
+															text:
+																musicalNotes.find(
+																	(data) => data.disempowering === item,
+																)?.negativeEmotions ?? "",
+															size: 18,
+														}),
+													],
 												}),
 											],
 										}),
@@ -232,7 +310,7 @@ export async function generateRichDocument({
 					new Paragraph({
 						text: "",
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 400, after: 200 },
+						spacing: { before: 100, after: 100 },
 					}),
 					...parsedData.emotional_state.notes.map(
 						(note) =>
@@ -242,22 +320,41 @@ export async function generateRichDocument({
 									new TableRow({
 										children: [
 											new TableCell({
-												width: { size: 20, type: WidthType.PERCENTAGE },
-												children: [new Paragraph({ text: note.title })],
-											}),
-											new TableCell({
-												width: { size: 40, type: WidthType.PERCENTAGE },
+												width: { size: 10, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: "General Reaction",
+														children: [
+															new TextRun({
+																text: note.title,
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
 											new TableCell({
-												width: { size: 40, type: WidthType.PERCENTAGE },
+												width: { size: 45, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: "Social Behaviour Pattern",
+														children: [
+															new TextRun({
+																text: "General Reaction",
+																size: 18,
+															}),
+														],
+													}),
+												],
+											}),
+											new TableCell({
+												width: { size: 45, type: WidthType.PERCENTAGE },
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: "Social Behaviour Pattern",
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
@@ -266,31 +363,46 @@ export async function generateRichDocument({
 									new TableRow({
 										children: [
 											new TableCell({
-												width: { size: 20, type: WidthType.PERCENTAGE },
+												width: { size: 10, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: note.social_behavior,
+														children: [
+															new TextRun({
+																text: note.social_behavior,
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
 											new TableCell({
-												width: { size: 40, type: WidthType.PERCENTAGE },
+												width: { size: 45, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: note.general_reaction,
+														children: [
+															new TextRun({
+																text: note.general_reaction,
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
 											new TableCell({
-												width: { size: 40, type: WidthType.PERCENTAGE },
+												width: { size: 45, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text:
-															musicalNotes.find(
-																(data) =>
-																	data.note === note.social_behavior &&
-																	data.language === "English",
-															)?.positiveEmotions ?? "",
+														children: [
+															new TextRun({
+																text:
+																	musicalNotes.find(
+																		(data) =>
+																			data.note === note.social_behavior &&
+																			data.language === "English",
+																	)?.positiveEmotions ?? "",
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
@@ -302,9 +414,10 @@ export async function generateRichDocument({
 
 					// Section 3: Rhythmic Pattern
 					new Paragraph({
-						text: "3. Rhythmic Pattern",
+						children: [new TextRun({ text: "3. Rhythmic Pattern", size: 22 })],
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 400, after: 200 },
+						spacing: { after: 200 },
+						pageBreakBefore: true,
 					}),
 					new Paragraph({
 						children: [
@@ -319,7 +432,7 @@ export async function generateRichDocument({
 					new Paragraph({
 						text: "",
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 200, after: 200 },
+						spacing: { before: 300, after: 200 },
 					}),
 
 					new Table({
@@ -332,7 +445,12 @@ export async function generateRichDocument({
 										columnSpan: 4,
 										children: [
 											new Paragraph({
-												text: `Frequent Emotion: ${parsedData.rhythmic_pattern.frequent_emotion.title_description}`,
+												children: [
+													new TextRun({
+														text: `Frequent Emotion: ${parsedData.rhythmic_pattern.frequent_emotion.title_description}`,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -341,11 +459,17 @@ export async function generateRichDocument({
 							new TableRow({
 								children: [
 									new TableCell({
-										width: { size: 15, type: WidthType.PERCENTAGE },
+										width: { size: 10, type: WidthType.PERCENTAGE },
 										columnSpan: 0.6,
 										children: [
 											new Paragraph({
-												text: parsedData.rhythmic_pattern.frequent_emotion.no,
+												children: [
+													new TextRun({
+														text: parsedData.rhythmic_pattern.frequent_emotion
+															.no,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -354,8 +478,13 @@ export async function generateRichDocument({
 										columnSpan: 0.6,
 										children: [
 											new Paragraph({
-												text: parsedData.rhythmic_pattern.frequent_emotion
-													.header,
+												children: [
+													new TextRun({
+														text: parsedData.rhythmic_pattern.frequent_emotion
+															.header,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -364,23 +493,33 @@ export async function generateRichDocument({
 										columnSpan: 1.4,
 										children: [
 											new Paragraph({
-												text: parsedData.rhythmic_pattern.frequent_emotion
-													.description,
+												children: [
+													new TextRun({
+														text: parsedData.rhythmic_pattern.frequent_emotion
+															.description,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
 									new TableCell({
-										width: { size: 35, type: WidthType.PERCENTAGE },
+										width: { size: 40, type: WidthType.PERCENTAGE },
 										columnSpan: 1.4,
 										children: [
 											new Paragraph({
-												text:
-													emotionsListFreqCore.find(
-														(data) =>
-															data.no ===
-																parsedData.rhythmic_pattern.frequent_emotion
-																	.no && data.language === "English",
-													)?.explanation ?? "",
+												children: [
+													new TextRun({
+														text:
+															emotionsListFreqCore.find(
+																(data) =>
+																	data.no ===
+																		parsedData.rhythmic_pattern.frequent_emotion
+																			.no && data.language === "English",
+															)?.explanation ?? "",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -393,7 +532,12 @@ export async function generateRichDocument({
 										width: { size: 100, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: `Core Emotion: ${parsedData.rhythmic_pattern.core_emotion.title_description}`,
+												children: [
+													new TextRun({
+														text: `Core Emotion: ${parsedData.rhythmic_pattern.core_emotion.title_description}`,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -403,10 +547,15 @@ export async function generateRichDocument({
 								children: [
 									new TableCell({
 										columnSpan: 1,
-										width: { size: 15, type: WidthType.PERCENTAGE },
+										width: { size: 10, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.rhythmic_pattern.core_emotion.no,
+												children: [
+													new TextRun({
+														text: parsedData.rhythmic_pattern.core_emotion.no,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -415,7 +564,13 @@ export async function generateRichDocument({
 										width: { size: 15, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.rhythmic_pattern.core_emotion.header,
+												children: [
+													new TextRun({
+														text: parsedData.rhythmic_pattern.core_emotion
+															.header,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -424,23 +579,33 @@ export async function generateRichDocument({
 										width: { size: 35, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.rhythmic_pattern.core_emotion
-													.description,
+												children: [
+													new TextRun({
+														text: parsedData.rhythmic_pattern.core_emotion
+															.description,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
 									new TableCell({
 										columnSpan: 1,
-										width: { size: 35, type: WidthType.PERCENTAGE },
+										width: { size: 40, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text:
-													emotionsListFreqCore.find(
-														(data) =>
-															data.no ===
-																parsedData.rhythmic_pattern.core_emotion.no &&
-															data.language === "English",
-													)?.explanation ?? "",
+												children: [
+													new TextRun({
+														text:
+															emotionsListFreqCore.find(
+																(data) =>
+																	data.no ===
+																		parsedData.rhythmic_pattern.core_emotion
+																			.no && data.language === "English",
+															)?.explanation ?? "",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -451,7 +616,12 @@ export async function generateRichDocument({
 
 					// Section 4: Your Present Sensory Attributes
 					new Paragraph({
-						text: "4. Your Present Sensory Attributes",
+						children: [
+							new TextRun({
+								text: "4. Your Present Sensory Attributes",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
 						spacing: { before: 400, after: 200 },
 					}),
@@ -464,13 +634,23 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: "BASE",
+												children: [
+													new TextRun({
+														text: "BASE",
+														size: 18,
+													}),
+												],
 												heading: HeadingLevel.HEADING_6,
 												alignment: AlignmentType.CENTER,
 											}),
 											new Paragraph({
-												text: parsedData.sensory_attributes.base
-													.title_description,
+												children: [
+													new TextRun({
+														text: parsedData.sensory_attributes.base
+															.title_description,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -478,13 +658,23 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: "NEXT",
+												children: [
+													new TextRun({
+														text: "NEXT",
+														size: 18,
+													}),
+												],
 												heading: HeadingLevel.HEADING_6,
 												alignment: AlignmentType.CENTER,
 											}),
 											new Paragraph({
-												text: parsedData.sensory_attributes.next
-													.title_description,
+												children: [
+													new TextRun({
+														text: parsedData.sensory_attributes.next
+															.title_description,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -495,13 +685,19 @@ export async function generateRichDocument({
 									new TableCell({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: parsedData.sensory_attributes.base.attributes.map(
-											(attr) => new Paragraph({ text: attr }),
+											(attr) =>
+												new Paragraph({
+													children: [new TextRun({ text: attr, size: 18 })],
+												}),
 										),
 									}),
 									new TableCell({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: parsedData.sensory_attributes.next.attributes.map(
-											(attr) => new Paragraph({ text: attr }),
+											(attr) =>
+												new Paragraph({
+													children: [new TextRun({ text: attr, size: 18 })],
+												}),
 										),
 									}),
 								],
@@ -511,7 +707,12 @@ export async function generateRichDocument({
 
 					// Section 5: Brain Activities
 					new Paragraph({
-						text: "5. Brain Activities",
+						children: [
+							new TextRun({
+								text: "5. Brain Activities",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
 						spacing: { before: 400, after: 200 },
 					}),
@@ -524,7 +725,12 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: "Left",
+												children: [
+													new TextRun({
+														text: "Left",
+														size: 18,
+													}),
+												],
 												alignment: AlignmentType.CENTER,
 											}),
 										],
@@ -533,7 +739,12 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: "Right",
+												children: [
+													new TextRun({
+														text: "Right",
+														size: 18,
+													}),
+												],
 												alignment: AlignmentType.CENTER,
 											}),
 										],
@@ -546,7 +757,12 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.brain_activities.left,
+												children: [
+													new TextRun({
+														text: parsedData.brain_activities.left,
+														size: 18,
+													}),
+												],
 												alignment: AlignmentType.CENTER,
 											}),
 										],
@@ -555,7 +771,12 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.brain_activities.right,
+												children: [
+													new TextRun({
+														text: parsedData.brain_activities.right,
+														size: 18,
+													}),
+												],
 												alignment: AlignmentType.CENTER,
 											}),
 										],
@@ -567,9 +788,15 @@ export async function generateRichDocument({
 
 					// Section 6: Present Character and Real Intention
 					new Paragraph({
-						text: "6. Present Character and Real Intention",
+						children: [
+							new TextRun({
+								text: "6. Present Character and Real Intentionn",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 400, after: 200 },
+						spacing: { after: 200 },
+						pageBreakBefore: true,
 					}),
 					new Table({
 						width: { size: 100, type: WidthType.PERCENTAGE },
@@ -579,7 +806,16 @@ export async function generateRichDocument({
 									new TableCell({
 										columnSpan: 5,
 										width: { size: 100, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Present Character" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Present Character",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 								],
 							}),
@@ -588,27 +824,69 @@ export async function generateRichDocument({
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 10, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Character" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Character",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 15, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Present Character" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Present Character",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 25, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Summary" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Summary",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 25, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Work Environment" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Career Choice",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 25, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Ideal Jobs" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Ideal Workspace", size: 18 }),
+												],
+											}),
+										],
 									}),
 								],
 							}),
@@ -620,7 +898,12 @@ export async function generateRichDocument({
 										width: { size: 10, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.present_character.character,
+												children: [
+													new TextRun({
+														text: parsedData.present_character.character,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -629,7 +912,13 @@ export async function generateRichDocument({
 										width: { size: 15, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.present_character.present_character,
+												children: [
+													new TextRun({
+														text: parsedData.present_character
+															.present_character,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -638,7 +927,12 @@ export async function generateRichDocument({
 										width: { size: 25, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.present_character.summary,
+												children: [
+													new TextRun({
+														text: parsedData.present_character.summary,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -647,12 +941,17 @@ export async function generateRichDocument({
 										width: { size: 25, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text:
-													presentCharacters.find(
-														(data) =>
-															data.character ===
-															parsedData.present_character.character,
-													)?.workEnvironment ?? "",
+												children: [
+													new TextRun({
+														text:
+															presentCharacters.find(
+																(data) =>
+																	data.character ===
+																	parsedData.present_character.character,
+															)?.workEnvironment ?? "",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -661,12 +960,17 @@ export async function generateRichDocument({
 										width: { size: 25, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text:
-													presentCharacters.find(
-														(data) =>
-															data.character ===
-															parsedData.present_character.character,
-													)?.ideasJobs ?? "",
+												children: [
+													new TextRun({
+														text:
+															presentCharacters.find(
+																(data) =>
+																	data.character ===
+																	parsedData.present_character.character,
+															)?.ideasJobs ?? "",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -677,7 +981,7 @@ export async function generateRichDocument({
 					new Paragraph({
 						text: "",
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 400, after: 200 },
+						pageBreakBefore: true,
 					}),
 					new Table({
 						width: { size: 100, type: WidthType.PERCENTAGE },
@@ -687,7 +991,16 @@ export async function generateRichDocument({
 									new TableCell({
 										columnSpan: 7,
 										width: { size: 100, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Real Intention" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Real Intention",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 								],
 							}),
@@ -696,37 +1009,83 @@ export async function generateRichDocument({
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 5, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Character" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Character",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 10, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Real Intention" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Real Intention",
+														size: 18,
+													}),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 17, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Summary" })],
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "Summary", size: 18 })],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 17, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Career Choice" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Career Choice", size: 18 }),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 17, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Ideal Workspace" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Ideal Workspace", size: 18 }),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 17, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Ideal Jobs" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Ideal Jobs", size: 18 }),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										columnSpan: 1,
 										width: { size: 17, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Grow Path" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Grow Path", size: 18 }),
+												],
+											}),
+										],
 									}),
 								],
 							}),
@@ -738,7 +1097,12 @@ export async function generateRichDocument({
 										width: { size: 5, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.real_intention.character,
+												children: [
+													new TextRun({
+														text: parsedData.real_intention.character,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -747,7 +1111,12 @@ export async function generateRichDocument({
 										width: { size: 10, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.real_intention.real_intention,
+												children: [
+													new TextRun({
+														text: parsedData.real_intention.real_intention,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -756,7 +1125,12 @@ export async function generateRichDocument({
 										width: { size: 17, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: parsedData.real_intention.summary,
+												children: [
+													new TextRun({
+														text: parsedData.real_intention.summary,
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -765,12 +1139,17 @@ export async function generateRichDocument({
 										width: { size: 17, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text:
-													realIntentions.find(
-														(data) =>
-															data.character ===
-															parsedData.real_intention.character,
-													)?.careerChoices ?? "",
+												children: [
+													new TextRun({
+														text:
+															realIntentions.find(
+																(data) =>
+																	data.character ===
+																	parsedData.real_intention.character,
+															)?.careerChoices ?? "",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -779,12 +1158,17 @@ export async function generateRichDocument({
 										width: { size: 17, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text:
-													realIntentions.find(
-														(data) =>
-															data.character ===
-															parsedData.real_intention.character,
-													)?.idealWorkplace ?? "",
+												children: [
+													new TextRun({
+														text:
+															realIntentions.find(
+																(data) =>
+																	data.character ===
+																	parsedData.real_intention.character,
+															)?.idealWorkplace ?? "",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -793,12 +1177,17 @@ export async function generateRichDocument({
 										width: { size: 17, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text:
-													realIntentions.find(
-														(data) =>
-															data.character ===
-															parsedData.real_intention.character,
-													)?.ideasJobs ?? "",
+												children: [
+													new TextRun({
+														text:
+															realIntentions.find(
+																(data) =>
+																	data.character ===
+																	parsedData.real_intention.character,
+															)?.ideasJobs ?? "",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -807,12 +1196,17 @@ export async function generateRichDocument({
 										width: { size: 17, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text:
-													realIntentions.find(
-														(data) =>
-															data.character ===
-															parsedData.real_intention.character,
-													)?.growPath ?? "",
+												children: [
+													new TextRun({
+														text:
+															realIntentions.find(
+																(data) =>
+																	data.character ===
+																	parsedData.real_intention.character,
+															)?.growPath ?? "",
+														size: 18,
+													}),
+												],
 											}),
 										],
 									}),
@@ -822,9 +1216,14 @@ export async function generateRichDocument({
 					}),
 					// Section 7: The Seven Leadership Dynamics
 					new Paragraph({
-						text: "7. The Seven Leadership Dynamics",
+						children: [
+							new TextRun({
+								text: "7. The Seven Leadership Dynamics",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 200, after: 200 },
+						spacing: { before: 400, after: 200 },
 					}),
 
 					new Table({
@@ -846,7 +1245,12 @@ export async function generateRichDocument({
 													width: { size: 33, type: WidthType.PERCENTAGE },
 													children: [
 														new Paragraph({
-															text: `${firstDynamics.title} : ${firstDynamics.title_description}`,
+															children: [
+																new TextRun({
+																	text: `${firstDynamics.title} : ${firstDynamics.title_description}`,
+																	size: 18,
+																}),
+															],
 														}),
 													],
 												}),
@@ -855,9 +1259,14 @@ export async function generateRichDocument({
 													width: { size: 33, type: WidthType.PERCENTAGE },
 													children: [
 														new Paragraph({
-															text: secondDynamics
-																? `${secondDynamics.title} : ${secondDynamics.title_description}`
-																: "",
+															children: [
+																new TextRun({
+																	text: secondDynamics
+																		? `${secondDynamics.title} : ${secondDynamics.title_description}`
+																		: "",
+																	size: 18,
+																}),
+															],
 														}),
 													],
 												}),
@@ -871,7 +1280,12 @@ export async function generateRichDocument({
 													width: { size: 33, type: WidthType.PERCENTAGE },
 													children: [
 														new Paragraph({
-															text: firstDynamics.value,
+															children: [
+																new TextRun({
+																	text: firstDynamics.value,
+																	size: 18,
+																}),
+															],
 															alignment: AlignmentType.CENTER,
 														}),
 													],
@@ -880,7 +1294,14 @@ export async function generateRichDocument({
 													width: { size: 33, type: WidthType.PERCENTAGE },
 													children: [
 														new Paragraph({
-															text: secondDynamics ? secondDynamics.value : "",
+															children: [
+																new TextRun({
+																	text: secondDynamics
+																		? secondDynamics.value
+																		: "",
+																	size: 18,
+																}),
+															],
 															alignment: AlignmentType.CENTER,
 														}),
 													],
@@ -896,13 +1317,23 @@ export async function generateRichDocument({
 
 					// Section 8: Your Top 5 Constructive Attributes
 					new Paragraph({
-						text: "8. Your Top 5 Constructive Attributes",
+						children: [
+							new TextRun({
+								text: "8. Your Top 5 Constructive Attributes",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 400, after: 200 },
+						spacing: { before: 400, after: 100 },
 					}),
 					new Paragraph({
-						text: parsedData.constructive_attributes.title_description,
-						spacing: { after: 100 },
+						children: [
+							new TextRun({
+								text: parsedData.constructive_attributes.title_description,
+								size: 18,
+							}),
+						],
+						spacing: { after: 200 },
 					}),
 					new Table({
 						width: { size: 100, type: WidthType.PERCENTAGE },
@@ -911,15 +1342,31 @@ export async function generateRichDocument({
 								children: [
 									new TableCell({
 										width: { size: 10, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "No." })],
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "No.", size: 18 })],
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 30, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Constructive" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Constructive", size: 18 }),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 60, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Description" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Description", size: 18 }),
+												],
+											}),
+										],
 									}),
 								],
 							}),
@@ -929,13 +1376,24 @@ export async function generateRichDocument({
 										children: [
 											new TableCell({
 												width: { size: 10, type: WidthType.PERCENTAGE },
-												children: [new Paragraph({ text: attr.No })],
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({ text: attr.No, size: 18 }),
+														],
+													}),
+												],
 											}),
 											new TableCell({
 												width: { size: 30, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: attr.Constructive,
+														children: [
+															new TextRun({
+																text: attr.Constructive,
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
@@ -943,7 +1401,12 @@ export async function generateRichDocument({
 												width: { size: 60, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: attr.Description || "",
+														children: [
+															new TextRun({
+																text: attr.Description || "",
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
@@ -955,13 +1418,24 @@ export async function generateRichDocument({
 
 					// Section 9: Your Top 5 Restrictive Attributes
 					new Paragraph({
-						text: "9. Your Top 5 Restrictive Attributes",
+						children: [
+							new TextRun({
+								text: "9. Your Top 5 Restrictive Attributes",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 400, after: 200 },
+						spacing: { after: 100 },
+						pageBreakBefore: true,
 					}),
 					new Paragraph({
-						text: parsedData.restrictive_attributes.title_description,
-						spacing: { after: 100 },
+						children: [
+							new TextRun({
+								text: parsedData.restrictive_attributes.title_description,
+								size: 18,
+							}),
+						],
+						spacing: { after: 200 },
 					}),
 					new Table({
 						width: { size: 100, type: WidthType.PERCENTAGE },
@@ -970,15 +1444,32 @@ export async function generateRichDocument({
 								children: [
 									new TableCell({
 										width: { size: 10, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "No." })],
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "No.", size: 18 })],
+												text: "No.",
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 30, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Restrictive" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Restrictive", size: 18 }),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 60, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Description" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Description", size: 18 }),
+												],
+											}),
+										],
 									}),
 								],
 							}),
@@ -988,17 +1479,34 @@ export async function generateRichDocument({
 										children: [
 											new TableCell({
 												width: { size: 10, type: WidthType.PERCENTAGE },
-												children: [new Paragraph({ text: attr.No })],
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({ text: attr.No, size: 18 }),
+														],
+													}),
+												],
 											}),
 											new TableCell({
 												width: { size: 30, type: WidthType.PERCENTAGE },
-												children: [new Paragraph({ text: attr.restrictive })],
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({ text: attr.restrictive, size: 18 }),
+														],
+													}),
+												],
 											}),
 											new TableCell({
 												width: { size: 60, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: attr.Description || "",
+														children: [
+															new TextRun({
+																text: attr.Description || "",
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
@@ -1010,7 +1518,12 @@ export async function generateRichDocument({
 
 					// Section 10: Past Experiences Shaped Your Thoughts
 					new Paragraph({
-						text: "10: Past Experiences Shaped Your Thoughts",
+						children: [
+							new TextRun({
+								text: "10. Past Experiences Shaped Your Thoughts",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
 						spacing: { before: 400, after: 200 },
 					}),
@@ -1023,7 +1536,12 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: "Code",
+												children: [
+													new TextRun({
+														text: "Code",
+														size: 18,
+													}),
+												],
 												alignment: AlignmentType.CENTER,
 											}),
 										],
@@ -1032,7 +1550,12 @@ export async function generateRichDocument({
 										width: { size: 50, type: WidthType.PERCENTAGE },
 										children: [
 											new Paragraph({
-												text: "Value",
+												children: [
+													new TextRun({
+														text: "Value",
+														size: 18,
+													}),
+												],
 												alignment: AlignmentType.CENTER,
 											}),
 										],
@@ -1047,7 +1570,12 @@ export async function generateRichDocument({
 												width: { size: 50, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: exp.code,
+														children: [
+															new TextRun({
+																text: exp.code,
+																size: 18,
+															}),
+														],
 														alignment: AlignmentType.CENTER,
 													}),
 												],
@@ -1056,7 +1584,12 @@ export async function generateRichDocument({
 												width: { size: 50, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: exp.value.toString(),
+														children: [
+															new TextRun({
+																text: exp.value.toString(),
+																size: 18,
+															}),
+														],
 														alignment: AlignmentType.CENTER,
 													}),
 												],
@@ -1069,9 +1602,15 @@ export async function generateRichDocument({
 
 					// Section 11: Organ Affected by Wellness Challenge.
 					new Paragraph({
-						text: "12: Organ Affected by Wellness Challenge",
+						children: [
+							new TextRun({
+								text: "11. Organ Affected by Wellness Challenge",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
-						spacing: { before: 400, after: 200 },
+						spacing: { after: 200 },
+						pageBreakBefore: true,
 					}),
 					new Table({
 						width: { size: 100, type: WidthType.PERCENTAGE },
@@ -1080,11 +1619,19 @@ export async function generateRichDocument({
 								children: [
 									new TableCell({
 										width: { size: 20, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Organ" })],
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "Organ" })],
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 80, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Description" })],
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "Description" })],
+											}),
+										],
 									}),
 								],
 							}),
@@ -1094,14 +1641,29 @@ export async function generateRichDocument({
 										children: [
 											new TableCell({
 												width: { size: 20, type: WidthType.PERCENTAGE },
-												children: [new Paragraph({ text: organ })],
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: organ,
+																size: 18,
+															}),
+														],
+													}),
+												],
 											}),
 											new TableCell({
 												width: { size: 80, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: healthData.find((data) => data.area === organ)
-															?.physicalWellbeing,
+														children: [
+															new TextRun({
+																text: healthData.find(
+																	(data) => data.area === organ,
+																)?.physicalWellbeing,
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
@@ -1122,12 +1684,22 @@ export async function generateRichDocument({
 									new TableCell({
 										width: { size: 20, type: WidthType.PERCENTAGE },
 										children: [
-											new Paragraph({ text: "Health Area Impacted by Organ" }),
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Health Area Impacted by Organ",
+													}),
+												],
+											}),
 										],
 									}),
 									new TableCell({
 										width: { size: 80, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Description" })],
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "Description" })],
+											}),
+										],
 									}),
 								],
 							}),
@@ -1138,13 +1710,27 @@ export async function generateRichDocument({
 											new TableCell({
 												width: { size: 20, type: WidthType.PERCENTAGE },
 												children: [
-													new Paragraph({ text: grouping.groupHealthArea }),
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: grouping.groupHealthArea,
+																size: 18,
+															}),
+														],
+													}),
 												],
 											}),
 											new TableCell({
 												width: { size: 80, type: WidthType.PERCENTAGE },
 												children: [
-													new Paragraph({ text: grouping.explanation }),
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: grouping.explanation,
+																size: 18,
+															}),
+														],
+													}),
 												],
 											}),
 										],
@@ -1154,7 +1740,12 @@ export async function generateRichDocument({
 					}),
 					// Section 12: Potential Mental & Physical Wellness Challenge
 					new Paragraph({
-						text: "12. Potential Mental & Physical Wellness Challenge",
+						children: [
+							new TextRun({
+								text: "12. Potential Mental & Physical Wellness Challenge",
+								size: 22,
+							}),
+						],
 						heading: HeadingLevel.HEADING_1,
 						spacing: { before: 400, after: 200 },
 					}),
@@ -1165,15 +1756,31 @@ export async function generateRichDocument({
 								children: [
 									new TableCell({
 										width: { size: 10, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "No." })],
+										children: [
+											new Paragraph({
+												children: [new TextRun({ text: "No.", size: 18 })],
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 30, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Wellness Challenge" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Wellness Challenge", size: 18 }),
+												],
+											}),
+										],
 									}),
 									new TableCell({
 										width: { size: 60, type: WidthType.PERCENTAGE },
-										children: [new Paragraph({ text: "Description" })],
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({ text: "Description", size: 18 }),
+												],
+											}),
+										],
 									}),
 								],
 							}),
@@ -1185,19 +1792,38 @@ export async function generateRichDocument({
 												width: { size: 10, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: challenge.No,
+														children: [
+															new TextRun({
+																text: challenge.No,
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),
 											new TableCell({
 												width: { size: 30, type: WidthType.PERCENTAGE },
-												children: [new Paragraph({ text: challenge.wellness })],
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: challenge.wellness,
+																size: 18,
+															}),
+														],
+													}),
+												],
 											}),
 											new TableCell({
 												width: { size: 60, type: WidthType.PERCENTAGE },
 												children: [
 													new Paragraph({
-														text: challenge.Description || "",
+														children: [
+															new TextRun({
+																text: challenge.Description ?? "",
+																size: 18,
+															}),
+														],
 													}),
 												],
 											}),

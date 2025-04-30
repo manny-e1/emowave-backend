@@ -3,6 +3,7 @@ import { parentPort, workerData } from "node:worker_threads";
 const PYTHON_SERVER_URL = `${process.env.PYTHON_DOMAIN}/extract`;
 import fs from "node:fs";
 import path from "node:path";
+
 async function processPDF() {
 	try {
 		const { filePath, clientId, documentName } = workerData;

@@ -146,6 +146,7 @@ export async function httpSaveClientDocument(
 				documentName: visualReport.name,
 			},
 		});
+
 		// Optional: Listen for messages from the worker (e.g., for logging)
 		worker.on("message", async (message) => {
 			if (message.success) {
@@ -167,10 +168,35 @@ export async function httpSaveClientDocument(
 					documentName: visualReport.name,
 					parsedData: message.extractedData,
 				});
-				await db.insert(generatedDocuments).values({
-					clientId: req.params.id,
-					name: visualReport.name,
-					path: uploadPath,
+				const conversionWorker = new Worker(
+					path.join(__dirname, "/workers/process-word-to-pdf-conversion.js"),
+					{
+						workerData: {
+							docxFilePath: uploadPath,
+						},
+					},
+				);
+				conversionWorker.on("message", async (conversionMessage) => {
+					if (conversionMessage.success) {
+						console.log(
+							`PDF conversion successful: ${conversionMessage.outputPath}`,
+						);
+						await db.insert(generatedDocuments).values({
+							clientId: req.params.id,
+							name: visualReport.name,
+							path: conversionMessage.outputPath,
+						});
+					} else {
+						console.error(`PDF conversion failed: ${conversionMessage.error}`);
+					}
+				});
+				conversionWorker.on("error", (error) => {
+					console.error(`Conversion Worker error: ${error.message}`);
+				});
+				conversionWorker.on("exit", (code) => {
+					if (code !== 0) {
+						console.error(`Conversion Worker exited with code ${code}`);
+					}
 				});
 			} else {
 				console.error(

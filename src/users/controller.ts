@@ -321,10 +321,10 @@ export async function httpChangeUserStatus(
 }
 
 export async function httpEditUser(
-	req: Request<{ id: string }, unknown, { name: string }>,
+	req: Request<{ id: string }, unknown, { name: string; dob?: string }>,
 	res: Response,
 ) {
-	const { name } = req.body;
+	const { name, dob } = req.body;
 	const { id: userId } = req.params;
 	const userResult = await UserService.getUser(userId, false);
 	if (userResult.error) {
@@ -334,7 +334,7 @@ export async function httpEditUser(
 		throw createHttpError(userResult.error);
 	}
 
-	const result = await UserService.editUser({ name, userId });
+	const result = await UserService.editUser({ name, userId, dob });
 	if (result.error) {
 		if (result.error === "update failed") {
 			throw createHttpError.NotFound(

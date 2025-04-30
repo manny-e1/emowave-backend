@@ -138,14 +138,17 @@ export async function getUserByEmail(email: string) {
 export async function editUser({
 	name,
 	userId,
+	dob,
 }: {
 	userId: string;
 	name: string;
+	dob?: string;
 }) {
+	const updateObj = dob ? { name, dob } : { name };
 	try {
 		const upd = await db
 			.update(users)
-			.set({ name })
+			.set(updateObj)
 			.where(eq(users.id, userId));
 		if (upd.rowCount === 0) {
 			return { error: "update failed" };
