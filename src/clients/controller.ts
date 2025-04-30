@@ -19,6 +19,7 @@ import {
 	type Condition,
 	parseAndExtractIDNReport,
 } from "../utils/parse-and-extract-idn-report.js";
+import { eq } from "drizzle-orm";
 
 type ClientData = {
 	"Client #": string;
@@ -181,11 +182,21 @@ export async function httpSaveClientDocument(
 						console.log(
 							`PDF conversion successful: ${conversionMessage.outputPath}`,
 						);
-						await db.insert(generatedDocuments).values({
-							clientId: req.params.id,
-							name: visualReport.name,
-							path: conversionMessage.outputPath,
-						});
+						await db
+							.insert(generatedDocuments)
+							.values({
+								clientId: req.params.id,
+								name: visualReport.name,
+								path: conversionMessage.outputPath,
+							})
+							.onConflictDoUpdate({
+								target: [generatedDocuments.clientId],
+								targetWhere: eq(generatedDocuments.clientId, req.params.id),
+								set: {
+									name: visualReport.name,
+									path: conversionMessage.outputPath,
+								},
+							});
 					} else {
 						console.error(`PDF conversion failed: ${conversionMessage.error}`);
 					}

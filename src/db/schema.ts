@@ -433,19 +433,23 @@ export const processedClientData = pgTable("processed_client_data", {
 export type ProcessedClientData = typeof processedClientData.$inferSelect;
 export type CreateProcessedClientData = typeof processedClientData.$inferInsert;
 
-export const generatedDocuments = pgTable("generated_documents", {
-	id: uuid().defaultRandom().notNull().primaryKey(),
-	clientId: uuid("client_id")
-		.references(() => clients.id, { onDelete: "cascade" })
-		.notNull(),
-	name: varchar({ length: 256 }).notNull(),
-	path: varchar({ length: 256 }).notNull(),
-	createdAt: timestamp("created_at").notNull().defaultNow(),
-	updatedAt: timestamp("updated_at")
-		.defaultNow()
-		.$onUpdate(() => new Date())
-		.notNull(),
-});
+export const generatedDocuments = pgTable(
+	"generated_documents",
+	{
+		id: uuid().defaultRandom().notNull().primaryKey(),
+		clientId: uuid("client_id")
+			.references(() => clients.id, { onDelete: "cascade" })
+			.notNull(),
+		name: varchar({ length: 256 }).notNull(),
+		path: varchar({ length: 256 }).notNull(),
+		createdAt: timestamp("created_at").notNull().defaultNow(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(tb) => [uniqueIndex("gendoc_client_id").on(tb.clientId)],
+);
 
 export type ProcessVisualReportData = {
 	brain_activities: {
