@@ -119,7 +119,11 @@ export async function httpSendOtp(
 	}
 	const client = await getClientByEmail(email);
 	if (!client) {
-		throw createHttpError.NotFound("client with this email is not found");
+		throw createHttpError.NotFound("email not found in client list");
+	}
+	const user = await UserService.getUserByEmail(email);
+	if (user.user) {
+		throw createHttpError.BadRequest("account with this email already exists");
 	}
 	const code = Math.floor(100000 + Math.random() * 900000);
 	const result = await UserService.saveOtp({ email, otp: code });
