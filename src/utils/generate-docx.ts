@@ -1794,7 +1794,7 @@ export async function generateRichDocument({
 													new Paragraph({
 														children: [
 															new TextRun({
-																text: challenge.No,
+																text: challenge.no,
 																size: 18,
 															}),
 														],
@@ -1820,7 +1820,7 @@ export async function generateRichDocument({
 													new Paragraph({
 														children: [
 															new TextRun({
-																text: challenge.Description ?? "",
+																text: challenge.description ?? "",
 																size: 18,
 															}),
 														],

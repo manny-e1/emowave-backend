@@ -5,6 +5,7 @@ import { Readable } from "node:stream";
 import {
 	generatedDocuments,
 	processedClientData,
+	type ProcessVisualReportData,
 	type Client,
 	type ClientDocument,
 	type CreateClientDocument,
@@ -19,7 +20,7 @@ import {
 	type Condition,
 	parseAndExtractIDNReport,
 } from "../utils/parse-and-extract-idn-report.js";
-import { eq } from "drizzle-orm";
+import * as ReferenceDataService from "../reference-datas/service.js";
 
 type ClientData = {
 	"Client #": string;
@@ -191,7 +192,6 @@ export async function httpSaveClientDocument(
 							})
 							.onConflictDoUpdate({
 								target: [generatedDocuments.clientId],
-								targetWhere: eq(generatedDocuments.clientId, req.params.id),
 								set: {
 									name: visualReport.name,
 									path: conversionMessage.outputPath,
@@ -270,4 +270,83 @@ export async function httpGetProcessedDocuments(
 	const { clientId } = req.params;
 	const result = await ClientService.getProcessedDocuments(clientId);
 	res.status(200).json(result);
+}
+
+export async function httpGetClientProcessedData(req: Request, res: Response) {
+	const { email } = req.user;
+	const client = await ClientService.getClientByEmail(email ?? "");
+	if (!client) {
+		throw createHttpError.NotFound("Client not found");
+	}
+	const result = await ClientService.getClientProcessedData(client.id);
+	if (result.error) {
+		if (result.error.includes("not found")) {
+			throw createHttpError.NotFound("Client processed data not found");
+		}
+		throw createHttpError.InternalServerError(result.error);
+	}
+	const [healthData, stressTypes, musicalNotes, commonReports] =
+		await Promise.all([
+			ReferenceDataService.getAllHealthData(),
+			ReferenceDataService.getAllStressTypes(),
+			ReferenceDataService.getAllMusicalNotes(),
+			ReferenceDataService.getAllCommonReports(),
+		]);
+	const visualReportData = result.processedData
+		?.visualReportData as ProcessVisualReportData;
+	const combinedData = {
+		...result.processedData,
+		stressIndicator: stressTypes.find(
+			(data) =>
+				Number.parseFloat(visualReportData.stress_level.score) >=
+					data.stressFrom &&
+				Number.parseFloat(visualReportData.stress_level.score) <= data.stressTo,
+		)?.indicator,
+		behaviorPatterns: visualReportData.emotional_state.empowering.map((s) => {
+			const musicalNote = musicalNotes.find((data) => data.empowering === s);
+			return {
+				note: musicalNote?.note,
+				frequency: musicalNote?.freq,
+				waveLength: musicalNote?.wavelength
+					? musicalNote.wavelength.replace(/cm/g, "").trim()
+					: musicalNote?.wavelength,
+				positiveEmotions: musicalNote?.positiveEmotions,
+				negativeEmotions: musicalNote?.negativeEmotions,
+				socialBehaviourPattern: musicalNote?.socialBehaviorPattern,
+			};
+		}),
+		commonReport: (() => {
+			const base = visualReportData.sensory_attributes.base;
+			const next = visualReportData.sensory_attributes.next;
+			const baseData = commonReports.find(
+				(data) =>
+					data.sensory.toLowerCase() === base.attributes[0].toLowerCase() &&
+					data.inwardOutwardOrientation.toLowerCase() ===
+						base.attributes[1].toLowerCase() &&
+					data.introvertExtrovertTendency.toLowerCase() ===
+						base.attributes[2].toLowerCase(),
+			);
+			const nextData = commonReports.find(
+				(data) =>
+					data.sensory.toLowerCase() === next.attributes[0].toLowerCase() &&
+					data.inwardOutwardOrientation.toLowerCase() ===
+						next.attributes[1].toLowerCase() &&
+					data.introvertExtrovertTendency.toLowerCase() ===
+						next.attributes[2].toLowerCase(),
+			);
+			return {
+				base: baseData,
+				next: nextData,
+			};
+		})(),
+		healthData: visualReportData.organ_indicators.map((organ, index) => {
+			return {
+				no: (index + 1).toString(),
+				area: organ,
+				physicalWellbeing: healthData.find((data) => data.area === organ)
+					?.physicalWellbeing,
+			};
+		}),
+	};
+	res.status(200).json({ processedData: combinedData });
 }

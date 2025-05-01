@@ -533,8 +533,8 @@ export type ProcessVisualReportData = {
 		score: string;
 	};
 	wellness_challenges: Array<{
-		Description: string;
-		No: string;
+		description: string;
+		no: string;
 		wellness: string;
 	}>;
 };

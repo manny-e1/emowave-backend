@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import db from "../db/index.js";
 import {
 	clientDocuments,
@@ -141,5 +141,21 @@ export async function getClientByEmail(email: string) {
 		return client;
 	} catch (error) {
 		return null;
+	}
+}
+
+export async function getClientProcessedData(clientId: string) {
+	try {
+		const processedData = await db.query.processedClientData.findFirst({
+			where: eq(processedClientData.clientId, clientId),
+			orderBy: desc(processedClientData.createdAt),
+		});
+		if (!processedData) {
+			return { error: "Processed data not found" };
+		}
+		return { processedData };
+	} catch (error) {
+		const err = error as Error;
+		return { error: err.message };
 	}
 }

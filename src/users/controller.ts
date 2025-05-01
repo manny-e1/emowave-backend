@@ -86,10 +86,6 @@ export async function httpCreateUser(
 			"This code has been expired, please request for a new one",
 		);
 	}
-	const client = await getClientByEmail(email);
-	if (!client) {
-		throw createHttpError.NotFound("client with this email is not found");
-	}
 	const hashedPassword = await argon2.hash(password);
 	const result = await UserService.createUser({
 		email,
@@ -117,8 +113,13 @@ export async function httpSendOtp(
 	res: Response,
 ) {
 	const { email, name } = req.body;
+
 	if (!email || !name) {
 		throw createHttpError.BadRequest("email and name are required");
+	}
+	const client = await getClientByEmail(email);
+	if (!client) {
+		throw createHttpError.NotFound("client with this email is not found");
 	}
 	const code = Math.floor(100000 + Math.random() * 900000);
 	const result = await UserService.saveOtp({ email, otp: code });
@@ -198,12 +199,12 @@ export async function httpLogin(
 	res: Response,
 ) {
 	const { email, password } = req.body;
-
 	const result = await UserService.getUserByEmail(email);
 	if (result.error || !result.user) {
-		if (result.error === "not found") {
+		if (result.error.includes("not found")) {
 			throw createHttpError.NotFound("invalid credentials");
 		}
+		console.log(result.error);
 		throw createHttpError(result.error);
 	}
 
@@ -270,6 +271,8 @@ export async function httpLogin(
 		email: user.email,
 		status: user.status,
 		role: user.role,
+		name: user.name,
+		dob: user.dob,
 	};
 
 	return res.status(200).json({

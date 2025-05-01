@@ -56,7 +56,7 @@ router.patch(
 );
 router
 	.route("/:id")
-	.all(errorCatcher(isAuthenticated), errorCatcher(isAdmin))
+	.all(errorCatcher(isAuthenticated))
 	.get(errorCatcher(UserController.httpGetUser))
 	.put(errorCatcher(UserController.httpEditUser))
 	.delete(errorCatcher(UserController.httpDeleteUser));

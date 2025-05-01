@@ -16,6 +16,11 @@ router
 	.get(errorCatcher(ClientController.httpGetClients));
 
 router
+	.route("/processed-data")
+	.all(errorCatcher(isAuthenticated))
+	.get(errorCatcher(ClientController.httpGetClientProcessedData));
+
+router
 	.route("/:id/documents")
 	.all(errorCatcher(isAuthenticated), errorCatcher(isAdmin))
 	.post(
