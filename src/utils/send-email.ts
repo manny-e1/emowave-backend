@@ -4,11 +4,13 @@ import { activationEmailTemplate } from "./activation-email-template.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { registrationOTPEmailTemplate } from "./registration-otp-email-template.js";
-
+import sGMail, { type MailDataRequired } from "@sendgrid/mail";
+import { ENVOBJ } from "./common-types.js";
+const env = ENVOBJ.parse(process.env);
 const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
-
+sGMail.setApiKey(env.EMAIL_PASS || "");
 const message = ({
 	email,
 	subject,
@@ -25,18 +27,18 @@ const message = ({
 	reason?: "reset" | "activation" | "otp";
 }) => {
 	const pwdReset = resetPasswordEmailTemplate({
-		link: `${process.env.FRONT_END_URL}/change-password?token=${token}`,
+		link: `${env.FRONT_END_URL}/change-password?token=${token}`,
 		name,
 		email,
 	});
 	console.log(
 		reset
-			? `${process.env.FRONT_END_URL}/change-password?token=${token}`
-			: `${process.env.FRONT_END_URL}/set-password?token=${token}`,
+			? `${env.FRONT_END_URL}/change-password?token=${token}`
+			: `${env.FRONT_END_URL}/set-password?token=${token}`,
 	);
 
 	const accActivation = activationEmailTemplate({
-		link: `${process.env.FRONT_END_URL}/set-password?token=${token}`,
+		link: `${env.FRONT_END_URL}/set-password?token=${token}`,
 		name,
 		email,
 	});
@@ -45,13 +47,14 @@ const message = ({
 		name,
 		email,
 	});
-	return {
-		from: process.env.EMAIL_FROM,
+	const obj: MailDataRequired = {
+		from: env.EMAIL_FROM,
 		to: email,
 		subject: subject,
 		text: "For clients with plaintext support only",
 		html: reason === "otp" ? otpEmail : reset ? pwdReset : accActivation,
 	};
+	return obj;
 };
 // const msg = {
 //   to: 'alexlim@mmdt.cc', // Change to your recipient
@@ -70,17 +73,18 @@ const message = ({
 //       console.error(error);
 //     });
 // }
-const transport = nodemailer.createTransport({
-	host: process.env.EMAIL_HOST,
-	port: Number(process.env.EMAIL_PORT),
-	secure: false,
-	auth: {
-		user: process.env.EMAIL_USER,
-		pass: process.env.EMAIL_PASS,
-	},
-	tls: {
-		rejectUnauthorized: false,
-	},
-});
 
-export { transport, message };
+// const transport = nodemailer.createTransport({
+// 	host: env.EMAIL_HOST,
+// 	port: Number(env.EMAIL_PORT),
+// 	secure: false,
+// 	auth: {
+// 		user: env.EMAIL_USER,
+// 		pass: env.EMAIL_PASS,
+// 	},
+// 	tls: {
+// 		rejectUnauthorized: false,
+// 	},
+// });
+
+export { sGMail, message };

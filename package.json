@@ -26,6 +26,7 @@
 	},
 	"homepage": "https://github.com/manny-e1/emowave-backend#readme",
 	"dependencies": {
+		"@sendgrid/mail": "^8.1.5",
 		"argon2": "^0.41.1",
 		"canvas": "^3.1.0",
 		"cors": "^2.8.5",
