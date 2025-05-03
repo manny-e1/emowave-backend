@@ -135,6 +135,23 @@ export async function getUserByEmail(email: string) {
 	}
 }
 
+export async function getUserByEmailAndRole(
+	email: string,
+	role: "user" | "admin",
+) {
+	try {
+		const user = await db.query.users.findFirst({
+			where: and(eq(users.email, email), eq(users.role, role)),
+		});
+		if (!user) {
+			return null;
+		}
+		return { user };
+	} catch (error) {
+		return null;
+	}
+}
+
 export async function editUser({
 	name,
 	userId,

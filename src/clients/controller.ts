@@ -86,7 +86,7 @@ export async function httpGetClients(req: Request, res: Response) {
 	const page = Number(req.query.page) || 1;
 	const limit = Number(req.query.limit) || 50;
 
-	const result = await ClientService.getClients({ page, limit });
+	const result = await ClientService.getClients({ page, limit: 8000 });
 	if (result.error) {
 		throw createHttpError(result.error);
 	}

@@ -42,7 +42,7 @@ export const users = pgTable(
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
-	(users) => [uniqueIndex("email_idx").on(users.email)],
+	(users) => [uniqueIndex("email_role_idx").on(users.email, users.role)],
 );
 
 export type User = typeof users.$inferSelect;

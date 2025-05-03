@@ -121,8 +121,8 @@ export async function httpSendOtp(
 	if (!client) {
 		throw createHttpError.NotFound("email not found in client list");
 	}
-	const user = await UserService.getUserByEmail(email);
-	if (user.user) {
+	const user = await UserService.getUserByEmailAndRole(email, "user");
+	if (user) {
 		throw createHttpError.BadRequest("account with this email already exists");
 	}
 	const code = Math.floor(100000 + Math.random() * 900000);
@@ -199,17 +199,17 @@ export async function httpGetUser(req: Request<{ id: string }>, res: Response) {
 }
 
 export async function httpLogin(
-	req: Request<unknown, unknown, { email: string; password: string }>,
+	req: Request<
+		unknown,
+		unknown,
+		{ email: string; password: string; role: "admin" | "user" }
+	>,
 	res: Response,
 ) {
-	const { email, password } = req.body;
-	const result = await UserService.getUserByEmail(email);
-	if (result.error || !result.user) {
-		if (result.error.includes("not found")) {
-			throw createHttpError.NotFound("invalid credentials");
-		}
-		console.log(result.error);
-		throw createHttpError(result.error);
+	const { email, password, role } = req.body;
+	const result = await UserService.getUserByEmailAndRole(email, role);
+	if (!result) {
+		throw createHttpError.NotFound("invalid credentials");
 	}
 
 	const user = result.user;

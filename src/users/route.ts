@@ -2,7 +2,7 @@ import {
 	errorCatcher,
 	validateRequest,
 } from "../middleware/error-middleware.js";
-import { Router } from "express";
+import { type Request, Router } from "express";
 import * as UserController from "./controller.js";
 import { isAdmin, isAuthenticated } from "../middleware/privilage.js";
 import { Email } from "./types.js";
@@ -22,7 +22,22 @@ router
 		errorCatcher(isAdmin),
 		errorCatcher(UserController.httpGetNormalUsers),
 	);
-router.post("/login", errorCatcher(UserController.httpLogin));
+router.post(
+	"/login",
+	(req: Request, _, next) => {
+		req.body.role = "user";
+		next();
+	},
+	errorCatcher(UserController.httpLogin),
+);
+router.post(
+	"/login/admin",
+	(req: Request, _, next) => {
+		req.body.role = "admin";
+		next();
+	},
+	errorCatcher(UserController.httpLogin),
+);
 router.patch("/activate", errorCatcher(UserController.httpActivateUser));
 router.post(
 	"/forgot-password",
