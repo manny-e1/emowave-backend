@@ -9,7 +9,7 @@ import {
 	isSameDay,
 	setTokenExpiry,
 } from "../utils/helpers.js";
-import { message, sGMail } from "../utils/send-email.js";
+import { message, mailer, transport } from "../utils/send-email.js";
 import argon2 from "argon2";
 // import { logger } from '@/logger.js';
 import jwt from "jsonwebtoken";
@@ -56,7 +56,8 @@ export async function httpCreateAdmin(
 		name: user.name,
 		reset: false,
 	});
-	sGMail
+	transport;
+	mailer
 		.send(msg)
 		.then(() =>
 			console.info(
@@ -93,6 +94,7 @@ export async function httpCreateUser(
 		name,
 		password: hashedPassword,
 		dob,
+		status: "active",
 	});
 
 	if (result.error || !result.user) {
@@ -138,7 +140,7 @@ export async function httpSendOtp(
 		reset: false,
 		reason: "otp",
 	});
-	sGMail
+	mailer
 		.send(msg)
 		.then(async () => {
 			console.info(`registration otp email sent to user with address ${email}`);
@@ -425,7 +427,7 @@ export async function httpResendAcctivationEmail(
 		name: user.name,
 		reset: false,
 	});
-	sGMail
+	mailer
 		.send(msg)
 		.then(() =>
 			console.info(`user activation email sent to user with address ${email}`),
@@ -466,7 +468,7 @@ export async function httpForgotPassword(
 		name: user.name,
 		reset: true,
 	});
-	sGMail
+	mailer
 		.send(msg)
 		.then(() =>
 			console.info(`reset password

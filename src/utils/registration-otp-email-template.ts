@@ -59,7 +59,6 @@ export function registrationOTPEmailTemplate({
                     margin: 0 auto;
                     "
                     >
-                      <p style="text-align:center; color:blue">Verify your identity</p>
                       <p style="text-align:start;">Hi ${name},</p>
                       <p style="text-align:start; font-size=20px; font-weight:600;">
                         Enter the following code to complete your login.

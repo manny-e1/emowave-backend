@@ -140,6 +140,14 @@ export async function httpSaveClientDocument(
 		.filter((d) => d !== undefined);
 	const idnReport = filePaths.find((f) => f.ext === "txt");
 	const visualReport = filePaths.find((f) => f.ext === "pdf");
+	if (idnReport && !visualReport) {
+		const conditions = await parseAndExtractIDNReport(idnReport.path);
+		await db.insert(processedClientData).values({
+			clientId: req.params.id,
+			idnData: conditions,
+			idnReportDocumentName: idnReport.name,
+		});
+	}
 	if (visualReport) {
 		const worker = new Worker(path.join(__dirname, "/workers/process-pdf.js"), {
 			workerData: {

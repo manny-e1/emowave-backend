@@ -74,17 +74,26 @@ const message = ({
 //     });
 // }
 
-// const transport = nodemailer.createTransport({
-// 	host: env.EMAIL_HOST,
-// 	port: Number(env.EMAIL_PORT),
-// 	secure: false,
-// 	auth: {
-// 		user: env.EMAIL_USER,
-// 		pass: env.EMAIL_PASS,
-// 	},
-// 	tls: {
-// 		rejectUnauthorized: false,
-// 	},
-// });
+const transport = nodemailer.createTransport({
+	host: env.EMAIL_HOST,
+	port: Number(env.EMAIL_PORT),
+	secure: false,
+	auth: {
+		user: env.EMAIL_USER,
+		pass: env.EMAIL_PASS,
+	},
+	tls: {
+		rejectUnauthorized: false,
+	},
+});
 
-export { sGMail, message };
+const mailer = {
+	send: (msg: MailDataRequired | nodemailer.SendMailOptions) => {
+		if (env.NODE_ENV === "production") {
+			return sGMail.send(msg as MailDataRequired);
+		}
+		return transport.sendMail(msg as nodemailer.SendMailOptions);
+	},
+};
+
+export { mailer, transport, message };
