@@ -326,11 +326,12 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 		...result.processedData,
 		stressIndicator: stressTypes.find(
 			(data) =>
-				Number.parseFloat(visualReportData.stress_level.score) >=
+				Number.parseFloat(visualReportData?.stress_level.score) >=
 					data.stressFrom &&
-				Number.parseFloat(visualReportData.stress_level.score) <= data.stressTo,
+				Number.parseFloat(visualReportData?.stress_level.score) <=
+					data.stressTo,
 		)?.indicator,
-		behaviorPatterns: visualReportData.emotional_state.empowering.map((s) => {
+		behaviorPatterns: visualReportData?.emotional_state.empowering.map((s) => {
 			const musicalNote = musicalNotes.find((data) => data.empowering === s);
 			return {
 				note: musicalNote?.note,
@@ -344,30 +345,30 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 			};
 		}),
 		commonReport: (() => {
-			const base = visualReportData.sensory_attributes.base;
-			const next = visualReportData.sensory_attributes.next;
+			const base = visualReportData?.sensory_attributes.base;
+			const next = visualReportData?.sensory_attributes.next;
 			const baseData = commonReports.find(
 				(data) =>
-					data.sensory.toLowerCase() === base.attributes[0].toLowerCase() &&
+					data.sensory.toLowerCase() === base?.attributes[0].toLowerCase() &&
 					data.inwardOutwardOrientation.toLowerCase() ===
-						base.attributes[1].toLowerCase() &&
+						base?.attributes[1].toLowerCase() &&
 					data.introvertExtrovertTendency.toLowerCase() ===
-						base.attributes[2].toLowerCase(),
+						base?.attributes[2].toLowerCase(),
 			);
 			const nextData = commonReports.find(
 				(data) =>
-					data.sensory.toLowerCase() === next.attributes[0].toLowerCase() &&
+					data.sensory.toLowerCase() === next?.attributes[0].toLowerCase() &&
 					data.inwardOutwardOrientation.toLowerCase() ===
-						next.attributes[1].toLowerCase() &&
+						next?.attributes[1].toLowerCase() &&
 					data.introvertExtrovertTendency.toLowerCase() ===
-						next.attributes[2].toLowerCase(),
+						next?.attributes[2].toLowerCase(),
 			);
 			return {
 				base: baseData,
 				next: nextData,
 			};
 		})(),
-		healthData: visualReportData.organ_indicators.map((organ, index) => {
+		healthData: visualReportData?.organ_indicators.map((organ, index) => {
 			return {
 				no: (index + 1).toString(),
 				area: organ,
