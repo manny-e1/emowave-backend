@@ -142,11 +142,20 @@ export async function httpSaveClientDocument(
 	const visualReport = filePaths.find((f) => f.ext === "pdf");
 	if (idnReport && !visualReport) {
 		const conditions = await parseAndExtractIDNReport(idnReport.path);
-		await db.insert(processedClientData).values({
-			clientId: req.params.id,
-			idnData: conditions,
-			idnReportDocumentName: idnReport.name,
-		});
+		await db
+			.insert(processedClientData)
+			.values({
+				clientId: req.params.id,
+				idnData: conditions,
+				idnReportDocumentName: idnReport.name,
+			})
+			.onConflictDoUpdate({
+				target: [processedClientData.clientId],
+				set: {
+					idnData: conditions,
+					idnReportDocumentName: idnReport?.name,
+				},
+			});
 	}
 	if (visualReport) {
 		const worker = new Worker(path.join(__dirname, "/workers/process-pdf.js"), {
@@ -167,13 +176,24 @@ export async function httpSaveClientDocument(
 				if (idnReport) {
 					conditions = await parseAndExtractIDNReport(idnReport.path);
 				}
-				await db.insert(processedClientData).values({
-					clientId: req.params.id,
-					visualReportDocumentName: visualReport.name,
-					visualReportData: message.extractedData,
-					idnData: conditions,
-					idnReportDocumentName: idnReport?.name,
-				});
+				await db
+					.insert(processedClientData)
+					.values({
+						clientId: req.params.id,
+						visualReportDocumentName: visualReport.name,
+						visualReportData: message.extractedData,
+						idnData: conditions,
+						idnReportDocumentName: idnReport?.name,
+					})
+					.onConflictDoUpdate({
+						target: [processedClientData.clientId],
+						set: {
+							visualReportDocumentName: visualReport.name,
+							visualReportData: message.extractedData,
+							idnData: conditions,
+							idnReportDocumentName: idnReport?.name,
+						},
+					});
 				const uploadPath = await generateRichDocument({
 					documentName: visualReport.name,
 					parsedData: message.extractedData,

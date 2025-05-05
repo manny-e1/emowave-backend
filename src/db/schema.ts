@@ -415,6 +415,7 @@ export const processedClientData = pgTable("processed_client_data", {
 	id: uuid().defaultRandom().notNull().primaryKey(),
 	clientId: uuid("client_id")
 		.references(() => clients.id, { onDelete: "cascade" })
+		.unique()
 		.notNull(),
 	visualReportDocumentName: varchar("visual_report_document_name", {
 		length: 256,
