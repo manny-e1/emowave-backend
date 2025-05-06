@@ -172,26 +172,30 @@ export async function httpSaveClientDocument(
 				console.log(
 					`Worker completed for client ${req.params.id}: ${message.extractedData}`,
 				);
-				let conditions: Condition[] | null = null;
+				const values: {
+					visualReportDocumentName: string;
+					visualReportData: unknown;
+					idnData?: unknown;
+					idnReportDocumentName?: string;
+				} = {
+					visualReportDocumentName: visualReport.name,
+					visualReportData: message.extractedData,
+				};
 				if (idnReport) {
-					conditions = await parseAndExtractIDNReport(idnReport.path);
+					const conditions = await parseAndExtractIDNReport(idnReport.path);
+					values.idnData = conditions;
+					values.idnReportDocumentName = idnReport.name;
 				}
 				await db
 					.insert(processedClientData)
 					.values({
 						clientId: req.params.id,
-						visualReportDocumentName: visualReport.name,
-						visualReportData: message.extractedData,
-						idnData: conditions,
-						idnReportDocumentName: idnReport?.name,
+						...values,
 					})
 					.onConflictDoUpdate({
 						target: [processedClientData.clientId],
 						set: {
-							visualReportDocumentName: visualReport.name,
-							visualReportData: message.extractedData,
-							idnData: conditions,
-							idnReportDocumentName: idnReport?.name,
+							...values,
 						},
 					});
 				const uploadPath = await generateRichDocument({
