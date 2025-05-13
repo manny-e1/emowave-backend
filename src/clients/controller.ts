@@ -24,8 +24,8 @@ import * as ReferenceDataService from "../reference-datas/service.js";
 import {
 	PERCENTAGE_RANGE,
 	SCALE_RANGE,
-} from "src/utils/scale-and-percentage-range.js";
-import { getAllBiologicalInflammationGroupings } from "src/inflammations/service.js";
+} from "../utils/scale-and-percentage-range.js";
+import { getAllBiologicalInflammationGroupings } from "../inflammations/service.js";
 
 type ClientData = {
 	"Client #": string;
