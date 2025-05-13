@@ -6,9 +6,9 @@ import {
 	generatedDocuments,
 	processedClientData,
 	type ProcessVisualReportData,
-	type Client,
 	type ClientDocument,
 	type CreateClientDocument,
+	type BiologicalInflammationGrouping,
 } from "../db/schema.js";
 import createHttpError from "http-errors";
 import path from "node:path";
@@ -17,10 +17,15 @@ import { fileURLToPath } from "node:url";
 import db from "../db/index.js";
 import { generateRichDocument } from "../utils/generate-docx.js";
 import {
-	type Condition,
+	type IDNReport,
 	parseAndExtractIDNReport,
 } from "../utils/parse-and-extract-idn-report.js";
 import * as ReferenceDataService from "../reference-datas/service.js";
+import {
+	PERCENTAGE_RANGE,
+	SCALE_RANGE,
+} from "src/utils/scale-and-percentage-range.js";
+import { getAllBiologicalInflammationGroupings } from "src/inflammations/service.js";
 
 type ClientData = {
 	"Client #": string;
@@ -140,22 +145,57 @@ export async function httpSaveClientDocument(
 		.filter((d) => d !== undefined);
 	const idnReport = filePaths.find((f) => f.ext === "txt");
 	const visualReport = filePaths.find((f) => f.ext === "pdf");
+	const prevProcessedData = await ClientService.getClientProcessedData(
+		req.params.id,
+	);
 	if (idnReport && !visualReport) {
-		const conditions = await parseAndExtractIDNReport(idnReport.path);
-		await db
-			.insert(processedClientData)
-			.values({
-				clientId: req.params.id,
-				idnData: conditions,
-				idnReportDocumentName: idnReport.name,
-			})
-			.onConflictDoUpdate({
-				target: [processedClientData.clientId],
-				set: {
-					idnData: conditions,
-					idnReportDocumentName: idnReport?.name,
-				},
-			});
+		const parsedIdnReport = await parseAndExtractIDNReport(idnReport.path);
+		const prevReports = prevProcessedData?.processedData
+			?.idnData as IDNReport[];
+		const prevDocuments =
+			prevProcessedData?.processedData?.idnReportDocumentName;
+		const sameScanType = prevReports?.find(
+			(report) => report.scanType === parsedIdnReport.scanType,
+		);
+		if (sameScanType) {
+			// Update the existing report with the same scan type
+			const updatedIDNData = prevReports.map((report) =>
+				report.scanType === parsedIdnReport.scanType ? parsedIdnReport : report,
+			);
+			await db
+				.insert(processedClientData)
+				.values({
+					clientId: req.params.id,
+					idnData: updatedIDNData,
+				})
+				.onConflictDoUpdate({
+					target: [processedClientData.clientId],
+					set: {
+						idnData: updatedIDNData,
+					},
+				});
+		} else {
+			const documents = prevDocuments
+				? [...prevDocuments, idnReport.name]
+				: [idnReport.name];
+			const appendedIDNData = prevReports
+				? [...prevReports, parsedIdnReport]
+				: [parsedIdnReport];
+			await db
+				.insert(processedClientData)
+				.values({
+					clientId: req.params.id,
+					idnData: appendedIDNData,
+					idnReportDocumentName: documents,
+				})
+				.onConflictDoUpdate({
+					target: [processedClientData.clientId],
+					set: {
+						idnData: appendedIDNData,
+						idnReportDocumentName: documents,
+					},
+				});
+		}
 	}
 	if (visualReport) {
 		const worker = new Worker(path.join(__dirname, "/workers/process-pdf.js"), {
@@ -175,16 +215,47 @@ export async function httpSaveClientDocument(
 				const values: {
 					visualReportDocumentName: string;
 					visualReportData: unknown;
-					idnData?: unknown;
-					idnReportDocumentName?: string;
+					idnData?: IDNReport[];
+					idnReportDocumentName?: string[];
 				} = {
 					visualReportDocumentName: visualReport.name,
 					visualReportData: message.extractedData,
 				};
 				if (idnReport) {
-					const conditions = await parseAndExtractIDNReport(idnReport.path);
-					values.idnData = conditions;
-					values.idnReportDocumentName = idnReport.name;
+					const parsedIdnReport = await parseAndExtractIDNReport(
+						idnReport.path,
+					);
+					const processedClientData =
+						await ClientService.getClientProcessedData(req.params.id);
+					const prevReports = processedClientData?.processedData
+						?.idnData as IDNReport[];
+					const prevDocuments =
+						processedClientData?.processedData?.idnReportDocumentName;
+					const sameScanType = prevReports?.find(
+						(report) => report.scanType === parsedIdnReport.scanType,
+					);
+
+					if (sameScanType) {
+						// Update the existing report with the same scan type
+						const updatedIDNData = prevReports?.map((report) =>
+							report.scanType === parsedIdnReport.scanType
+								? parsedIdnReport
+								: report,
+						);
+						values.idnData = updatedIDNData;
+						values.idnReportDocumentName = prevDocuments
+							? [...prevDocuments, idnReport.name]
+							: [idnReport.name];
+					} else {
+						const documents = prevDocuments
+							? [...prevDocuments, idnReport.name]
+							: [idnReport.name];
+						const appendedIDNData = prevReports
+							? [...prevReports, parsedIdnReport]
+							: [parsedIdnReport];
+						values.idnData = appendedIDNData;
+						values.idnReportDocumentName = documents;
+					}
 				}
 				await db
 					.insert(processedClientData)
@@ -326,6 +397,14 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 		]);
 	const visualReportData = result.processedData
 		?.visualReportData as ProcessVisualReportData;
+	const idnReports = result.processedData?.idnData as IDNReport[];
+	const inflammationGroupingsResult =
+		await getAllBiologicalInflammationGroupings();
+	let groupings: BiologicalInflammationGrouping[] = [];
+	if (inflammationGroupingsResult.groupings) {
+		groupings = inflammationGroupingsResult.groupings;
+	}
+
 	const combinedData = {
 		...result.processedData,
 		stressIndicator: stressTypes.find(
@@ -380,6 +459,41 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 					?.physicalWellbeing,
 			};
 		}),
+		scaleRange: SCALE_RANGE,
+		percentageRange: PERCENTAGE_RANGE,
+		scanTypes: idnReports
+			.map((idnReport) => {
+				const reportInflammations = idnReport.report.map((f) => f.name);
+				for (const group of groupings) {
+					if (group.inflammations.length === reportInflammations.length) {
+						const groupInfl = group.inflammations.sort().join();
+						if (groupInfl === reportInflammations.sort().join()) {
+							const totalScale = idnReport.report.reduce(
+								(sum, item) => sum + (item.scale ?? 0),
+								0,
+							);
+							const totalPercentage = idnReport.report.reduce(
+								(sum, item) =>
+									sum +
+									(item.percentage
+										? Number(item.percentage.replace("%", ""))
+										: 0),
+								0,
+							);
+							return {
+								scanType: idnReport.scanType,
+								avgScale: Number(
+									(totalScale / idnReport.report.length).toFixed(1),
+								),
+								avgPercentage: Number(
+									(totalPercentage / idnReport.report.length).toFixed(1),
+								),
+							};
+						}
+					}
+				}
+			})
+			.filter(Boolean),
 	};
 	res.status(200).json({ processedData: combinedData });
 }

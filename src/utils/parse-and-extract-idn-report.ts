@@ -6,6 +6,10 @@ export type Condition = {
 	realFreq?: string[];
 	brainFreq?: string[];
 };
+export type IDNReport = {
+	report: Condition[];
+	scanType: number;
+};
 export async function parseAndExtractIDNReport(filePath: string) {
 	const content = await fs.readFile(filePath, "utf8");
 	const conditions = [];
@@ -30,6 +34,7 @@ export async function parseAndExtractIDNReport(filePath: string) {
 	}
 
 	let currentCondition: Condition | null = null;
+	let scanType = 0;
 
 	for (const line of lines) {
 		if (line.includes("Date :")) {
@@ -74,7 +79,13 @@ export async function parseAndExtractIDNReport(filePath: string) {
 				? brainFreqMatch[1].split(",").map((a) => a.trim())
 				: [];
 		}
+		if (currentCondition && line.includes("Scantype:")) {
+			const scanTypeMatch = line.match(/Scantype:\s*(\d+)/);
+			if (scanTypeMatch) {
+				scanType = Number.parseInt(scanTypeMatch[1].trim());
+			}
+		}
 	}
 	if (currentCondition) conditions.push(currentCondition);
-	return conditions;
+	return { report: conditions, scanType };
 }

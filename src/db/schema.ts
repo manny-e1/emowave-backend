@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
 	integer,
 	pgEnum,
@@ -398,7 +399,7 @@ export const organIndicatorGroupings = pgTable("organ_indicator_groupings", {
 	groupHealthArea: varchar("group_health_area", { length: 256 })
 		.unique()
 		.notNull(),
-	healthAreas: text("health_areas").array().notNull(),
+	healthAreas: text("health_areas").array().unique().notNull(),
 	explanation: text().notNull(),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 	updatedAt: timestamp("updated_at")
@@ -411,6 +412,24 @@ export type OrganIndicatorGrouping =
 export type CreateOrganIndicatorGrouping =
 	typeof organIndicatorGroupings.$inferInsert;
 
+export const biologicalInflammationGroupings = pgTable(
+	"biological_inflammation_groupings",
+	{
+		id: uuid().defaultRandom().notNull().primaryKey(),
+		groupName: varchar("group_name", { length: 256 }).unique().notNull(),
+		inflammations: text().array().notNull(),
+		createdAt: timestamp("created_at").notNull().defaultNow(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+);
+export type BiologicalInflammationGrouping =
+	typeof biologicalInflammationGroupings.$inferSelect;
+export type CreateBiologicalInflammationGrouping =
+	typeof biologicalInflammationGroupings.$inferInsert;
+
 export const processedClientData = pgTable("processed_client_data", {
 	id: uuid().defaultRandom().notNull().primaryKey(),
 	clientId: uuid("client_id")
@@ -422,8 +441,8 @@ export const processedClientData = pgTable("processed_client_data", {
 	}),
 	idnReportDocumentName: varchar("idn_report_document_name", {
 		length: 256,
-	}),
-	idnData: jsonb("idn_data"),
+	}).array(),
+	idnData: jsonb("idn_data").array(),
 	visualReportData: jsonb("visual_report_data"),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 	updatedAt: timestamp("updated_at")
@@ -451,6 +470,10 @@ export const generatedDocuments = pgTable(
 	},
 	(tb) => [uniqueIndex("gendoc_client_id").on(tb.clientId)],
 );
+
+export const inflammations = pgTable("inflammations", {
+	name: varchar({ length: 256 }).unique().notNull(),
+});
 
 export type ProcessVisualReportData = {
 	brain_activities: {

@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema.js";
+import { sql } from "drizzle-orm";
 
 // import { logger } from '../logger.js';
 
@@ -30,4 +31,10 @@ pool.on("error", (err) => {
 
 const db = drizzle(pool, { schema, casing: "snake_case" });
 
+await db.execute(sql`
+  CREATE OR REPLACE FUNCTION sort_text_array(text[]) RETURNS text[] AS $$
+    SELECT array_agg(elem ORDER BY elem)
+    FROM unnest($1) elem;
+  $$ LANGUAGE SQL IMMUTABLE;
+`);
 export default db;

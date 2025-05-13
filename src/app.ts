@@ -10,13 +10,15 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 dotenv.config();
 
-import type { Role } from "./db/schema.js";
+import { inflammations, type Role } from "./db/schema.js";
 import { ENVOBJ } from "./utils/common-types.js";
 import db from "./db/index.js";
 import { errorHandler, notFound } from "./middleware/error-middleware.js";
 import { userRouter } from "./users/route.js";
 import { clientRouter } from "./clients/route.js";
 import { organIndicatorGroupingRouter } from "./organ-indicator-groupings/route.js";
+import { InflammationRouter } from "./inflammations/route.js";
+import { sql } from "drizzle-orm";
 
 declare global {
 	namespace Express {
@@ -44,10 +46,15 @@ try {
 	throw new Error((error as ZodError).message);
 }
 
-await migrate(db, {
-	migrationsFolder: "drizzle",
-});
-
+// await migrate(db, {
+// 	migrationsFolder: "drizzle",
+// });
+await db.execute(sql`
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_sorted_health_areas_idx ON organ_indicator_groupings (sort_text_array(health_areas));
+`);
+await db.execute(sql`
+  CREATE UNIQUE INDEX IF NOT EXISTS unique_sorted_bio_inflammations_idx ON biological_inflammation_groupings (sort_text_array(inflammations));
+`);
 app.disable("x-powered-by");
 app.use(
 	helmet({
@@ -82,6 +89,7 @@ app.get("/", async (req, res) => {
 app.use("/api/users", userRouter);
 app.use("/api/clients", clientRouter);
 app.use("/api/organ-indicators", organIndicatorGroupingRouter);
+app.use("/api/inflammations", InflammationRouter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(notFound);
