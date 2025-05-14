@@ -14,7 +14,9 @@ export async function createBiologicalInflammationGrouping(
 	} catch (error) {
 		const err = error as Error;
 		if (err.message.includes("duplicate key value violates")) {
-			return { error: "Grouping with this combination already exists" };
+			return {
+				error: "Grouping with this inflammation combination already exists",
+			};
 		}
 		return { error: err.message };
 	}
@@ -62,7 +64,9 @@ export async function updateBiologicalInflammationGrouping(
 	} catch (error) {
 		const err = error as Error;
 		if (err.message.includes("duplicate key value violates")) {
-			return { error: "Grouping with this health area already exists" };
+			return {
+				error: "Grouping with these inflammation combination already exists",
+			};
 		}
 		return { error: err.message };
 	}
