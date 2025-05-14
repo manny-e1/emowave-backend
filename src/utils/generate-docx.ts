@@ -18,7 +18,7 @@ import type {
 } from "../db/schema.js";
 import * as ReferenceDataService from "../reference-datas/service.js";
 import path from "node:path";
-import { getClientProcessedData } from "src/clients/service.js";
+import { getClientProcessedData } from "../clients/service.js";
 import type { IDNReport } from "./parse-and-extract-idn-report.js";
 
 export async function generateRichDocument({
