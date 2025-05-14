@@ -12,14 +12,24 @@ import {
 	AlignmentType,
 } from "docx";
 import fs from "node:fs";
-import type { ProcessVisualReportData } from "../db/schema.js";
+import type {
+	OrganIndicatorGrouping,
+	ProcessVisualReportData,
+} from "../db/schema.js";
 import * as ReferenceDataService from "../reference-datas/service.js";
 import path from "node:path";
+import { getClientProcessedData } from "src/clients/service.js";
+import type { IDNReport } from "./parse-and-extract-idn-report.js";
 
 export async function generateRichDocument({
 	documentName,
 	parsedData,
-}: { documentName: string; parsedData: ProcessVisualReportData }) {
+	clientId,
+}: {
+	documentName: string;
+	parsedData: ProcessVisualReportData;
+	clientId: string;
+}) {
 	const imagePath = parsedData.images[0];
 	const imageBuffer = fs.readFileSync(imagePath);
 
@@ -31,6 +41,8 @@ export async function generateRichDocument({
 		emotionsListFreqCore,
 		presentCharacters,
 		groupings,
+		biologicalInflammationGroupings,
+		processedClientDataResult,
 	] = await Promise.all([
 		ReferenceDataService.getAllHealthData(),
 		ReferenceDataService.getAllStressTypes(),
@@ -39,8 +51,72 @@ export async function generateRichDocument({
 		ReferenceDataService.getAllEmotionsListFreqCore(),
 		ReferenceDataService.getAllPresentCharacters(),
 		ReferenceDataService.getOrganIndicatorGroupingsForDoc(),
+		ReferenceDataService.getBioloicalInflammationGroupingsForDoc(),
+		getClientProcessedData(clientId),
 	]);
+	const processedClientData = processedClientDataResult.processedData;
+	const idnReports = processedClientData?.idnData as IDNReport[];
+	let filteredOrganIndicatorGrouping: OrganIndicatorGrouping | null = null;
+	for (const group of groupings) {
+		const groupOrgs = group.healthAreas.sort().join();
+		if (groupOrgs === parsedData.organ_indicators.sort().join()) {
+			filteredOrganIndicatorGrouping = group;
+			break;
+		}
+	}
 
+	let biologicalInflammationGroup = "";
+	const biologicalInflammations = idnReports
+		.map((idnReport) => {
+			const reportInflammations = idnReport.report.map((f) => f.name);
+			for (const group of biologicalInflammationGroupings) {
+				if (group.inflammations.length === reportInflammations.length) {
+					const groupInfl = group.inflammations.sort().join();
+					if (groupInfl === reportInflammations.sort().join()) {
+						biologicalInflammationGroup = group.groupName;
+						return group.inflammations;
+					}
+					return [];
+				}
+				return [];
+			}
+			return [];
+		})
+		.filter(Boolean)
+		.flat();
+	const scanTypes = idnReports
+		.map((idnReport) => {
+			const reportInflammations = idnReport.report.map((f) => f.name);
+			for (const group of biologicalInflammationGroupings) {
+				if (group.inflammations.length === reportInflammations.length) {
+					const groupInfl = group.inflammations.sort().join();
+					if (groupInfl === reportInflammations.sort().join()) {
+						const totalScale = idnReport.report.reduce(
+							(sum, item) => sum + (item.scale ?? 0),
+							0,
+						);
+						const totalPercentage = idnReport.report.reduce(
+							(sum, item) =>
+								sum +
+								(item.percentage
+									? Number(item.percentage.replace("%", ""))
+									: 0),
+							0,
+						);
+						return {
+							scanType: idnReport.scanType,
+							avgScale: Number(
+								(totalScale / idnReport.report.length).toFixed(1),
+							),
+							avgPercentage: Number(
+								(totalPercentage / idnReport.report.length).toFixed(1),
+							),
+						};
+					}
+				}
+			}
+		})
+		.filter(Boolean);
 	const doc = new Document({
 		sections: [
 			{
@@ -1703,39 +1779,40 @@ export async function generateRichDocument({
 									}),
 								],
 							}),
-							...groupings.map(
-								(grouping) =>
-									new TableRow({
+
+							new TableRow({
+								children: [
+									new TableCell({
+										width: { size: 20, type: WidthType.PERCENTAGE },
 										children: [
-											new TableCell({
-												width: { size: 20, type: WidthType.PERCENTAGE },
+											new Paragraph({
 												children: [
-													new Paragraph({
-														children: [
-															new TextRun({
-																text: grouping.groupHealthArea,
-																size: 18,
-															}),
-														],
-													}),
-												],
-											}),
-											new TableCell({
-												width: { size: 80, type: WidthType.PERCENTAGE },
-												children: [
-													new Paragraph({
-														children: [
-															new TextRun({
-																text: grouping.explanation,
-																size: 18,
-															}),
-														],
+													new TextRun({
+														text:
+															filteredOrganIndicatorGrouping?.groupHealthArea ??
+															"",
+														size: 18,
 													}),
 												],
 											}),
 										],
 									}),
-							),
+									new TableCell({
+										width: { size: 80, type: WidthType.PERCENTAGE },
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text:
+															filteredOrganIndicatorGrouping?.explanation ?? "",
+														size: 18,
+													}),
+												],
+											}),
+										],
+									}),
+								],
+							}),
 						],
 					}),
 					// Section 12: Potential Mental & Physical Wellness Challenge
@@ -1831,6 +1908,186 @@ export async function generateRichDocument({
 									}),
 							),
 						],
+					}),
+
+					// 13. Biological Inflammation
+					new Paragraph({
+						children: [
+							new TextRun({
+								text: "13. Biological Inflammation",
+								size: 22,
+							}),
+						],
+						heading: HeadingLevel.HEADING_1,
+						spacing: { after: 200 },
+						pageBreakBefore: true,
+					}),
+					new Table({
+						width: { size: 100, type: WidthType.PERCENTAGE },
+						rows: [
+							new TableRow({
+								children: [
+									new TableCell({
+										width: { size: 100, type: WidthType.PERCENTAGE },
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "Biological Inflammation Group",
+														size: 18,
+														bold: true,
+													}),
+												],
+											}),
+										],
+									}),
+								],
+							}),
+							new TableRow({
+								children: [
+									new TableCell({
+										width: { size: 100, type: WidthType.PERCENTAGE },
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: biologicalInflammationGroup,
+														size: 18,
+													}),
+												],
+											}),
+										],
+									}),
+								],
+							}),
+						],
+					}),
+					new Paragraph({
+						text: "",
+						spacing: { before: 20, after: 20 },
+					}),
+					new Table({
+						width: { size: 100, type: WidthType.PERCENTAGE },
+						rows: [
+							new TableRow({
+								children: [
+									new TableCell({
+										width: { size: 100, type: WidthType.PERCENTAGE },
+										children: [
+											new Paragraph({
+												children: [
+													new TextRun({
+														text: "List of Biological Inflammation",
+														size: 18,
+														bold: true,
+													}),
+												],
+											}),
+										],
+									}),
+								],
+							}),
+							...biologicalInflammations.map((inf) => {
+								return new TableRow({
+									children: [
+										new TableCell({
+											width: { size: 100, type: WidthType.PERCENTAGE },
+											children: [
+												new Paragraph({
+													children: [
+														new TextRun({
+															text: inf,
+															size: 18,
+														}),
+													],
+												}),
+											],
+										}),
+									],
+								});
+							}),
+						],
+					}),
+					...scanTypes.flatMap((d) => {
+						return [
+							new Paragraph({
+								children: [
+									new TextRun({
+										text: `Scan Type: ${d?.scanType ?? ""}`,
+										size: 22,
+										color: "000000",
+									}),
+								],
+								spacing: { before: 300, after: 100 },
+							}),
+							new Table({
+								width: { size: 100, type: WidthType.PERCENTAGE },
+								rows: [
+									new TableRow({
+										children: [
+											new TableCell({
+												width: { size: 50, type: WidthType.PERCENTAGE },
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: "Percentage",
+																size: 18,
+																bold: true,
+															}),
+														],
+													}),
+												],
+											}),
+											new TableCell({
+												width: { size: 50, type: WidthType.PERCENTAGE },
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: "Scale",
+																size: 18,
+																bold: true,
+															}),
+														],
+													}),
+												],
+											}),
+										],
+									}),
+									new TableRow({
+										children: [
+											new TableCell({
+												width: { size: 100, type: WidthType.PERCENTAGE },
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: `${d?.avgPercentage ?? ""}%`,
+																size: 18,
+															}),
+														],
+													}),
+												],
+											}),
+											new TableCell({
+												width: { size: 100, type: WidthType.PERCENTAGE },
+												children: [
+													new Paragraph({
+														children: [
+															new TextRun({
+																text: `${d?.avgScale ?? ""}`,
+																size: 18,
+															}),
+														],
+													}),
+												],
+											}),
+										],
+									}),
+								],
+							}),
+						];
 					}),
 				],
 			},

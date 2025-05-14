@@ -272,6 +272,7 @@ export async function httpSaveClientDocument(
 				const uploadPath = await generateRichDocument({
 					documentName: visualReport.name,
 					parsedData: message.extractedData,
+					clientId: req.params.id,
 				});
 				const conversionWorker = new Worker(
 					path.join(__dirname, "/workers/process-word-to-pdf-conversion.js"),

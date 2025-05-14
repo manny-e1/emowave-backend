@@ -98,3 +98,12 @@ export async function getOrganIndicatorGroupingsForDoc() {
 		return [];
 	}
 }
+
+export async function getBioloicalInflammationGroupingsForDoc() {
+	try {
+		const data = await db.query.biologicalInflammationGroupings.findMany();
+		return data;
+	} catch (error) {
+		return [];
+	}
+}
