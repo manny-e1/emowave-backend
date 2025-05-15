@@ -145,57 +145,93 @@ export async function httpSaveClientDocument(
 		.filter((d) => d !== undefined);
 	const idnReport = filePaths.find((f) => f.ext === "txt");
 	const visualReport = filePaths.find((f) => f.ext === "pdf");
-	const prevProcessedData = await ClientService.getClientProcessedData(
-		req.params.id,
-	);
 	if (idnReport && !visualReport) {
+		const prevProcessedData = await ClientService.getClientProcessedData(
+			req.params.id,
+		);
 		const parsedIdnReport = await parseAndExtractIDNReport(idnReport.path);
-		const prevReports = prevProcessedData?.processedData
-			?.idnData as IDNReport[];
+		const prevReports =
+			(prevProcessedData?.processedData?.idnData as IDNReport[]) ?? [];
 		const prevDocuments =
-			prevProcessedData?.processedData?.idnReportDocumentName;
-		const sameScanType = prevReports?.find(
+			prevProcessedData?.processedData?.idnReportDocumentName ?? [];
+		const sameScanType = prevReports.find(
 			(report) => report.scanType === parsedIdnReport.scanType,
 		);
-		if (sameScanType) {
-			// Update the existing report with the same scan type
-			const updatedIDNData = prevReports.map((report) =>
-				report.scanType === parsedIdnReport.scanType ? parsedIdnReport : report,
-			);
-			await db
-				.insert(processedClientData)
-				.values({
-					clientId: req.params.id,
+
+		const updatedIDNData = sameScanType
+			? prevReports.map((report) =>
+					report.scanType === parsedIdnReport.scanType
+						? parsedIdnReport
+						: report,
+				)
+			: [...prevReports, parsedIdnReport];
+		const documents = sameScanType
+			? prevDocuments
+			: [...prevDocuments, idnReport.name];
+
+		const clientData = await db
+			.insert(processedClientData)
+			.values({
+				clientId: req.params.id,
+				idnData: updatedIDNData,
+				idnReportDocumentName: documents,
+			})
+			.onConflictDoUpdate({
+				target: [processedClientData.clientId],
+				set: {
 					idnData: updatedIDNData,
-				})
-				.onConflictDoUpdate({
-					target: [processedClientData.clientId],
-					set: {
-						idnData: updatedIDNData,
-					},
-				});
-		} else {
-			const documents = prevDocuments
-				? [...prevDocuments, idnReport.name]
-				: [idnReport.name];
-			const appendedIDNData = prevReports
-				? [...prevReports, parsedIdnReport]
-				: [parsedIdnReport];
-			await db
-				.insert(processedClientData)
-				.values({
-					clientId: req.params.id,
-					idnData: appendedIDNData,
 					idnReportDocumentName: documents,
-				})
-				.onConflictDoUpdate({
-					target: [processedClientData.clientId],
-					set: {
-						idnData: appendedIDNData,
-						idnReportDocumentName: documents,
-					},
-				});
-		}
+				},
+			})
+			.returning();
+
+		const uploadPath = await generateRichDocument({
+			documentName: idnReport.name,
+			parsedData: clientData?.[0]
+				.visualReportData as ProcessVisualReportData | null,
+			idnReports: clientData?.[0]?.idnData as IDNReport[] | null,
+		});
+
+		const conversionWorker = new Worker(
+			path.join(__dirname, "/workers/process-word-to-pdf-conversion.js"),
+			{
+				workerData: {
+					docxFilePath: uploadPath,
+				},
+			},
+		);
+
+		conversionWorker.on("message", async (conversionMessage) => {
+			if (conversionMessage.success) {
+				console.log(
+					`PDF conversion successful: ${conversionMessage.outputPath}`,
+				);
+				await db
+					.insert(generatedDocuments)
+					.values({
+						clientId: req.params.id,
+						name: idnReport.name,
+						path: conversionMessage.outputPath,
+					})
+					.onConflictDoUpdate({
+						target: [generatedDocuments.clientId],
+						set: {
+							name: idnReport.name,
+							path: conversionMessage.outputPath,
+						},
+					});
+			} else {
+				console.error(`PDF conversion failed: ${conversionMessage.error}`);
+			}
+		});
+		conversionWorker.on("error", (error) => {
+			console.error(`Conversion Worker error: ${error.message}`);
+		});
+		conversionWorker.on("exit", (code) => {
+			if (code !== 0) {
+				console.error(`Conversion Worker exited with code ${code}`);
+			}
+		});
 	}
 	if (visualReport) {
 		const worker = new Worker(path.join(__dirname, "/workers/process-pdf.js"), {
@@ -221,16 +257,16 @@ export async function httpSaveClientDocument(
 					visualReportDocumentName: visualReport.name,
 					visualReportData: message.extractedData,
 				};
+				const clientData = await ClientService.getClientProcessedData(
+					req.params.id,
+				);
 				if (idnReport) {
 					const parsedIdnReport = await parseAndExtractIDNReport(
 						idnReport.path,
 					);
-					const processedClientData =
-						await ClientService.getClientProcessedData(req.params.id);
-					const prevReports = processedClientData?.processedData
-						?.idnData as IDNReport[];
+					const prevReports = clientData?.processedData?.idnData as IDNReport[];
 					const prevDocuments =
-						processedClientData?.processedData?.idnReportDocumentName;
+						clientData?.processedData?.idnReportDocumentName;
 					const sameScanType = prevReports?.find(
 						(report) => report.scanType === parsedIdnReport.scanType,
 					);
@@ -272,7 +308,7 @@ export async function httpSaveClientDocument(
 				const uploadPath = await generateRichDocument({
 					documentName: visualReport.name,
 					parsedData: message.extractedData,
-					clientId: req.params.id,
+					idnReports: clientData.processedData?.idnData as IDNReport[] | null,
 				});
 				const conversionWorker = new Worker(
 					path.join(__dirname, "/workers/process-word-to-pdf-conversion.js"),

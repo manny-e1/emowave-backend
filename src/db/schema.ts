@@ -482,9 +482,9 @@ export type ProcessVisualReportData = {
 	};
 	constructive_attributes: {
 		attributes: Array<{
-			Constructive: string;
-			Description: string | null;
-			No: string;
+			constructive: string;
+			description: string | null;
+			no: string;
 		}>;
 		title_description: string;
 	};
@@ -522,8 +522,8 @@ export type ProcessVisualReportData = {
 	};
 	restrictive_attributes: {
 		attributes: Array<{
-			Description: string;
-			No: string;
+			description: string;
+			no: string;
 			restrictive: string;
 		}>;
 		title_description: string;

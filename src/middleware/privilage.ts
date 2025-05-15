@@ -41,6 +41,9 @@ export async function isAuthenticated(
 		};
 		next();
 	} catch (error) {
+		if ((error as Error).message.includes("jwt expired")) {
+			throw createHttpError.Unauthorized("Login session expired");
+		}
 		throw createHttpError.Unauthorized((error as Error).message);
 	}
 }

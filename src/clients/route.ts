@@ -7,9 +7,8 @@ import { uploadAndSaveDocs, uploadDocs } from "../utils/upload-docs.js";
 const router = Router();
 router
 	.route("/")
+	.all(errorCatcher(isAuthenticated), errorCatcher(isAdmin))
 	.post(
-		errorCatcher(isAuthenticated),
-		errorCatcher(isAdmin),
 		errorCatcher(uploadDocs.single("doc")),
 		errorCatcher(ClientController.httpSaveClients),
 	)
@@ -35,8 +34,8 @@ router
 
 router.get(
 	"/:clientId/processed-documents",
-	// errorCatcher(isAuthenticated),
-	// errorCatcher(isAdmin),
+	errorCatcher(isAuthenticated),
+	errorCatcher(isAdmin),
 	errorCatcher(ClientController.httpGetProcessedDocuments),
 );
 
@@ -50,6 +49,8 @@ router
 
 router.delete(
 	"/documents/:id",
+	errorCatcher(isAuthenticated),
+	errorCatcher(isAdmin),
 	errorCatcher(ClientController.httpDeleteClientDocument),
 );
 
