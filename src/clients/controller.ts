@@ -442,7 +442,24 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 	if (inflammationGroupingsResult.groupings) {
 		groupings = inflammationGroupingsResult.groupings;
 	}
-	const groupNames = new Set<string>();
+	const groupNames = Array.from(
+		new Set(
+			idnReports?.flatMap((idnReport) => {
+				const reportInflammations = idnReport.report.map((f) => f.name);
+				const filteredInflammationsNames = [];
+				for (const group of groupings) {
+					if (
+						group.inflammations.every((inflammation) =>
+							reportInflammations.includes(inflammation),
+						)
+					) {
+						filteredInflammationsNames.push(group.groupName);
+					}
+				}
+				return filteredInflammationsNames.flat();
+			}),
+		),
+	);
 	const combinedData = {
 		...result.processedData,
 		stressIndicator: stressTypes.find(
@@ -508,7 +525,6 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 							reportInflammations.includes(inflammation),
 						)
 					) {
-						groupNames.add(group.groupName);
 						const totalScale = idnReport.report.reduce(
 							(sum, item) => sum + (item.scale ?? 0),
 							0,
