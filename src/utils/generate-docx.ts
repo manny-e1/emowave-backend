@@ -56,57 +56,62 @@ export async function generateRichDocument({
 	]);
 	let filteredOrganIndicatorGrouping: OrganIndicatorGrouping | null = null;
 	for (const group of groupings) {
-		const groupOrgs = group.healthAreas.sort().join();
-		if (groupOrgs === parsedData?.organ_indicators.sort().join()) {
+		if (
+			group.healthAreas.every((healthArea) =>
+				parsedData?.organ_indicators.includes(healthArea),
+			)
+		) {
 			filteredOrganIndicatorGrouping = group;
 			break;
 		}
 	}
 
-	const biologicalInflammationGroupNames: string[] = [];
-	const biologicalInflammations = idnReports?.flatMap((idnReport) => {
-		const reportInflammations = idnReport.report.map((f) => f.name);
-		const filteredInflammations = [];
-		for (const group of biologicalInflammationGroupings) {
-			if (group.inflammations.length === reportInflammations.length) {
-				const groupInfl = group.inflammations.sort().join();
-				if (groupInfl === reportInflammations.sort().join()) {
-					biologicalInflammationGroupNames.push(group.groupName);
-					filteredInflammations.push(group.inflammations);
+	const biologicalInflammationGroupNames = new Set<string>();
+	const biologicalInflammations = Array.from(
+		new Set(
+			idnReports?.flatMap((idnReport) => {
+				const reportInflammations = idnReport.report.map((f) => f.name);
+				const filteredInflammations = [];
+				for (const group of biologicalInflammationGroupings) {
+					if (
+						group.inflammations.every((inflammation) =>
+							reportInflammations.includes(inflammation),
+						)
+					) {
+						biologicalInflammationGroupNames.add(group.groupName);
+						filteredInflammations.push(group.inflammations);
+					}
 				}
-			}
-		}
-		return filteredInflammations.flat();
-	});
+				return filteredInflammations.flat();
+			}),
+		),
+	);
 	const scanTypes = idnReports
 		?.map((idnReport) => {
 			const reportInflammations = idnReport.report.map((f) => f.name);
 			for (const group of biologicalInflammationGroupings) {
-				if (group.inflammations.length === reportInflammations.length) {
-					const groupInfl = group.inflammations.sort().join();
-					if (groupInfl === reportInflammations.sort().join()) {
-						const totalScale = idnReport.report.reduce(
-							(sum, item) => sum + (item.scale ?? 0),
-							0,
-						);
-						const totalPercentage = idnReport.report.reduce(
-							(sum, item) =>
-								sum +
-								(item.percentage
-									? Number(item.percentage.replace("%", ""))
-									: 0),
-							0,
-						);
-						return {
-							scanType: idnReport.scanType,
-							avgScale: Number(
-								(totalScale / idnReport.report.length).toFixed(1),
-							),
-							avgPercentage: Number(
-								(totalPercentage / idnReport.report.length).toFixed(1),
-							),
-						};
-					}
+				if (
+					group.inflammations.every((inflammation) =>
+						reportInflammations.includes(inflammation),
+					)
+				) {
+					const totalScale = idnReport.report.reduce(
+						(sum, item) => sum + (item.scale ?? 0),
+						0,
+					);
+					const totalPercentage = idnReport.report.reduce(
+						(sum, item) =>
+							sum +
+							(item.percentage ? Number(item.percentage.replace("%", "")) : 0),
+						0,
+					);
+					return {
+						scanType: idnReport.scanType,
+						avgScale: Number((totalScale / idnReport.report.length).toFixed(1)),
+						avgPercentage: Number(
+							(totalPercentage / idnReport.report.length).toFixed(1),
+						),
+					};
 				}
 			}
 		})
@@ -1992,7 +1997,7 @@ export async function generateRichDocument({
 												}),
 											],
 										}),
-										...biologicalInflammationGroupNames.map(
+										...Array.from(biologicalInflammationGroupNames).map(
 											(name) =>
 												new TableRow({
 													children: [

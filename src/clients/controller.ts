@@ -293,7 +293,7 @@ export async function httpSaveClientDocument(
 						values.idnReportDocumentName = documents;
 					}
 				}
-				await db
+				const insertedData = await db
 					.insert(processedClientData)
 					.values({
 						clientId: req.params.id,
@@ -304,11 +304,12 @@ export async function httpSaveClientDocument(
 						set: {
 							...values,
 						},
-					});
+					})
+					.returning();
 				const uploadPath = await generateRichDocument({
 					documentName: visualReport.name,
 					parsedData: message.extractedData,
-					idnReports: clientData.processedData?.idnData as IDNReport[] | null,
+					idnReports: insertedData?.[0]?.idnData as IDNReport[] | null,
 				});
 				const conversionWorker = new Worker(
 					path.join(__dirname, "/workers/process-word-to-pdf-conversion.js"),
@@ -502,31 +503,32 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 			.map((idnReport) => {
 				const reportInflammations = idnReport.report.map((f) => f.name);
 				for (const group of groupings) {
-					if (group.inflammations.length === reportInflammations.length) {
-						const groupInfl = group.inflammations.sort().join();
-						if (groupInfl === reportInflammations.sort().join()) {
-							const totalScale = idnReport.report.reduce(
-								(sum, item) => sum + (item.scale ?? 0),
-								0,
-							);
-							const totalPercentage = idnReport.report.reduce(
-								(sum, item) =>
-									sum +
-									(item.percentage
-										? Number(item.percentage.replace("%", ""))
-										: 0),
-								0,
-							);
-							return {
-								scanType: idnReport.scanType,
-								avgScale: Number(
-									(totalScale / idnReport.report.length).toFixed(1),
-								),
-								avgPercentage: Number(
-									(totalPercentage / idnReport.report.length).toFixed(1),
-								),
-							};
-						}
+					if (
+						group.inflammations.every((inflammation) =>
+							reportInflammations.includes(inflammation),
+						)
+					) {
+						const totalScale = idnReport.report.reduce(
+							(sum, item) => sum + (item.scale ?? 0),
+							0,
+						);
+						const totalPercentage = idnReport.report.reduce(
+							(sum, item) =>
+								sum +
+								(item.percentage
+									? Number(item.percentage.replace("%", ""))
+									: 0),
+							0,
+						);
+						return {
+							scanType: idnReport.scanType,
+							avgScale: Number(
+								(totalScale / idnReport.report.length).toFixed(1),
+							),
+							avgPercentage: Number(
+								(totalPercentage / idnReport.report.length).toFixed(1),
+							),
+						};
 					}
 				}
 			})
