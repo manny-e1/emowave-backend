@@ -442,7 +442,7 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 	if (inflammationGroupingsResult.groupings) {
 		groupings = inflammationGroupingsResult.groupings;
 	}
-
+	const groupNames = new Set<string>();
 	const combinedData = {
 		...result.processedData,
 		stressIndicator: stressTypes.find(
@@ -508,6 +508,7 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 							reportInflammations.includes(inflammation),
 						)
 					) {
+						groupNames.add(group.groupName);
 						const totalScale = idnReport.report.reduce(
 							(sum, item) => sum + (item.scale ?? 0),
 							0,
@@ -533,6 +534,7 @@ export async function httpGetClientProcessedData(req: Request, res: Response) {
 				}
 			})
 			.filter(Boolean),
+		inflammationGroupNames: Array.from(groupNames),
 	};
 	res.status(200).json({ processedData: combinedData });
 }
