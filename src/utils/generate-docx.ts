@@ -89,31 +89,35 @@ export async function generateRichDocument({
 	const scanTypes = idnReports
 		?.map((idnReport) => {
 			const reportInflammations = idnReport.report.map((f) => f.name);
+			const exactMatch = [];
 			for (const group of biologicalInflammationGroupings) {
 				if (
 					group.inflammations.every((inflammation) =>
 						reportInflammations.includes(inflammation),
 					)
 				) {
-					const totalScale = idnReport.report.reduce(
-						(sum, item) => sum + (item.scale ?? 0),
-						0,
-					);
-					const totalPercentage = idnReport.report.reduce(
-						(sum, item) =>
-							sum +
-							(item.percentage ? Number(item.percentage.replace("%", "")) : 0),
-						0,
-					);
-					return {
-						scanType: idnReport.scanType,
-						avgScale: Number((totalScale / idnReport.report.length).toFixed(1)),
-						avgPercentage: Number(
-							(totalPercentage / idnReport.report.length).toFixed(1),
-						),
-					};
+					for (const report of idnReport.report) {
+						if (group.inflammations.includes(report.name as string)) {
+							exactMatch.push(report);
+						}
+					}
 				}
 			}
+			const totalScale = exactMatch.reduce(
+				(sum, item) => sum + (item.scale ?? 0),
+				0,
+			);
+			const totalPercentage = exactMatch.reduce(
+				(sum, item) =>
+					sum +
+					(item.percentage ? Number(item.percentage.replace("%", "")) : 0),
+				0,
+			);
+			return {
+				scanType: idnReport.scanType,
+				avgScale: Number((totalScale / exactMatch.length).toFixed(1)),
+				avgPercentage: Number((totalPercentage / exactMatch.length).toFixed(1)),
+			};
 		})
 		.filter(Boolean)
 		.sort((a, b) => {
