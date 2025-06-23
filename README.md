@@ -4,6 +4,7 @@
 ## Prerequisites
 - Node.js (v22 or higher)
 - PM2 (installed globally)
+- Bun (https://bun.sh/)
 
 ## Installation
 
@@ -42,6 +43,12 @@
 2. Push the migration to the database:
    ```bash
    npm run db:push
+   ```
+## Data Insertion
+
+1. Run the data insertion script:
+   ```bash
+   bun scripts/index.ts
    ```
 
 ## Deployment
