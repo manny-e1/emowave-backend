@@ -29,11 +29,12 @@ const _inflammations = [
 	"Rheumatoid Arthritis ++",
 ];
 
-try {
-	const data = _inflammations.map((d) => ({ name: d }));
-	await db.insert(inflammations).values(data);
-	console.info("Inflammations inserted successfully");
-	process.exit();
-} catch (error) {
-	console.error(error);
+export async function insertInflammations() {
+	try {
+		const data = _inflammations.map((d) => ({ name: d }));
+		await db.insert(inflammations).values(data);
+		console.info("Inflammations inserted successfully");
+	} catch (error) {
+		console.error(error);
+	}
 }

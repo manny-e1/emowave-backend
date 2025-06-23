@@ -10,29 +10,26 @@ type Wellness = {
 	Description: string;
 	Status: string;
 };
+export function insertWellnessList() {
+	const results: Wellness[] = [];
 
-const results: Wellness[] = [];
-
-fs.createReadStream(
-	process.env.NODE_ENV === "production"
-		? "/home/ubuntu/Wellness List.csv"
-		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Wellness List.csv",
-)
-	.pipe(csv())
-	.on("data", (data: Wellness) => results.push(data))
-	.on("end", async () => {
-		try {
-			await db.insert(wellnessList).values(
-				results.map((data) => ({
-					language: data.Language,
-					no: data["No."],
-					header: data.Header,
-					description: data.Description,
-					status: data.Status,
-				})),
-			);
-			console.log("Wellness List inserted successfully");
-		} catch (error) {
-			console.error("Error inserting Wellness List:", error);
-		}
-	});
+	fs.createReadStream(`${process.env.DOCUMENTS_PATH}/Wellness List.csv`)
+		.pipe(csv())
+		.on("data", (data: Wellness) => results.push(data))
+		.on("end", async () => {
+			try {
+				await db.insert(wellnessList).values(
+					results.map((data) => ({
+						language: data.Language,
+						no: data["No."],
+						header: data.Header,
+						description: data.Description,
+						status: data.Status,
+					})),
+				);
+				console.log("Wellness List inserted successfully");
+			} catch (error) {
+				console.error("Error inserting Wellness List:", error);
+			}
+		});
+}

@@ -8,25 +8,23 @@ type HealthData = {
 	"physical wellbeing": string;
 };
 
-const results: HealthData[] = [];
+export function insertHealthData() {
+	const results: HealthData[] = [];
 
-fs.createReadStream(
-	process.env.NODE_ENV === "production"
-		? "/home/ubuntu/All Health Data.csv"
-		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Health Data.csv",
-)
-	.pipe(csv())
-	.on("data", (data: HealthData) => results.push(data))
-	.on("end", async () => {
-		try {
-			await db.insert(healthData).values(
-				results.map((data) => ({
-					area: data.Area,
-					physicalWellbeing: data["physical wellbeing"],
-				})),
-			);
-			console.log("Health Data inserted successfully");
-		} catch (error) {
-			console.error("Error inserting health data:", error);
-		}
-	});
+	fs.createReadStream(`${process.env.DOCUMENTS_PATH}/All Health Data.csv`)
+		.pipe(csv())
+		.on("data", (data: HealthData) => results.push(data))
+		.on("end", async () => {
+			try {
+				await db.insert(healthData).values(
+					results.map((data) => ({
+						area: data.Area,
+						physicalWellbeing: data["physical wellbeing"],
+					})),
+				);
+				console.log("Health Data inserted successfully");
+			} catch (error) {
+				console.error("Error inserting health data:", error);
+			}
+		});
+}

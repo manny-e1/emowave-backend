@@ -11,30 +11,29 @@ type EmotionFreqCore = {
 	Status: string;
 	Explanation: string;
 };
+export function insertEmotionsListFreqCore() {
+	const results: EmotionFreqCore[] = [];
 
-const results: EmotionFreqCore[] = [];
-
-fs.createReadStream(
-	process.env.NODE_ENV === "production"
-		? "/home/ubuntu/Emotions List_ Freq _ Core.csv"
-		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Emotions List_ Freq _ Core.csv",
-)
-	.pipe(csv())
-	.on("data", (data: EmotionFreqCore) => results.push(data))
-	.on("end", async () => {
-		try {
-			await db.insert(emotionsListFreqCore).values(
-				results.map((data) => ({
-					language: data.Language,
-					no: data["No."],
-					header: data.Header,
-					description: data.Description,
-					status: data.Status,
-					explanation: data.Explanation,
-				})),
-			);
-			console.log("Emotions List Freq Core data inserted successfully");
-		} catch (error) {
-			console.error("Error inserting Emotions List Freq Core data:", error);
-		}
-	});
+	fs.createReadStream(
+		`${process.env.DOCUMENTS_PATH}/Emotions List_ Freq _ Core.csv`,
+	)
+		.pipe(csv())
+		.on("data", (data: EmotionFreqCore) => results.push(data))
+		.on("end", async () => {
+			try {
+				await db.insert(emotionsListFreqCore).values(
+					results.map((data) => ({
+						language: data.Language,
+						no: data["No."],
+						header: data.Header,
+						description: data.Description,
+						status: data.Status,
+						explanation: data.Explanation,
+					})),
+				);
+				console.log("Emotions List Freq Core data inserted successfully");
+			} catch (error) {
+				console.error("Error inserting Emotions List Freq Core data:", error);
+			}
+		});
+}

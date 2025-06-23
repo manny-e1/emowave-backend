@@ -11,30 +11,27 @@ type StressType = {
 	Indicator: string;
 	"Children Intelligence": string;
 };
+export function insertStressTypes() {
+	const results: StressType[] = [];
 
-const results: StressType[] = [];
-
-fs.createReadStream(
-	process.env.NODE_ENV === "production"
-		? "/home/ubuntu/All Stress Types.csv"
-		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Stress Types.csv",
-)
-	.pipe(csv())
-	.on("data", (data: StressType) => results.push(data))
-	.on("end", async () => {
-		try {
-			await db.insert(stressTypes).values(
-				results.map((data) => ({
-					stressFrom: Number.parseFloat(data["Stress-From"]),
-					stressTo: Number.parseFloat(data["Stress-To"]),
-					descriptionEn: data["Description-En"],
-					descriptionCh: data["Description-Ch"],
-					indicator: data.Indicator,
-					childrenIntelligence: data["Children Intelligence"],
-				})),
-			);
-			console.log("Stress Types inserted successfully");
-		} catch (error) {
-			console.error("Error inserting Stress Types:", error);
-		}
-	});
+	fs.createReadStream(`${process.env.DOCUMENTS_PATH}/All Stress Types.csv`)
+		.pipe(csv())
+		.on("data", (data: StressType) => results.push(data))
+		.on("end", async () => {
+			try {
+				await db.insert(stressTypes).values(
+					results.map((data) => ({
+						stressFrom: Number.parseFloat(data["Stress-From"]),
+						stressTo: Number.parseFloat(data["Stress-To"]),
+						descriptionEn: data["Description-En"],
+						descriptionCh: data["Description-Ch"],
+						indicator: data.Indicator,
+						childrenIntelligence: data["Children Intelligence"],
+					})),
+				);
+				console.log("Stress Types inserted successfully");
+			} catch (error) {
+				console.error("Error inserting Stress Types:", error);
+			}
+		});
+}

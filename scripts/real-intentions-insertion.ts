@@ -16,33 +16,31 @@ type RealIntention = {
 	"Video Real Intention": string;
 };
 
-const results: RealIntention[] = [];
+export function insertRealIntentions() {
+	const results: RealIntention[] = [];
 
-fs.createReadStream(
-	process.env.NODE_ENV === "production"
-		? "/home/ubuntu/All Real Intentions.csv"
-		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All Real Intentions.csv",
-)
-	.pipe(csv())
-	.on("data", (data: RealIntention) => results.push(data))
-	.on("end", async () => {
-		try {
-			await db.insert(realIntentions).values(
-				results.map((data) => ({
-					language: data.Language,
-					no: data.No,
-					character: data.Character,
-					realIntention: data["Real Intention"],
-					summary: data.Summary,
-					careerChoices: data["Career Choices"],
-					idealWorkplace: data["Ideal Workplace"],
-					ideasJobs: data["Ideas Jobs"],
-					growPath: data["Grow Path"],
-					videoRealIntention: data["Video Real Intention"],
-				})),
-			);
-			console.log("Real intentions inserted successfully");
-		} catch (error) {
-			console.error("Error inserting Real intentions:", error);
-		}
-	});
+	fs.createReadStream(`${process.env.DOCUMENTS_PATH}/All Real Intentions.csv`)
+		.pipe(csv())
+		.on("data", (data: RealIntention) => results.push(data))
+		.on("end", async () => {
+			try {
+				await db.insert(realIntentions).values(
+					results.map((data) => ({
+						language: data.Language,
+						no: data.No,
+						character: data.Character,
+						realIntention: data["Real Intention"],
+						summary: data.Summary,
+						careerChoices: data["Career Choices"],
+						idealWorkplace: data["Ideal Workplace"],
+						ideasJobs: data["Ideas Jobs"],
+						growPath: data["Grow Path"],
+						videoRealIntention: data["Video Real Intention"],
+					})),
+				);
+				console.log("Real intentions inserted successfully");
+			} catch (error) {
+				console.error("Error inserting Real intentions:", error);
+			}
+		});
+}

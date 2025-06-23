@@ -11,30 +11,27 @@ type CommonReport = {
 	"Your style of learning": string;
 	"Your way of decision making": string;
 };
+export function insertCommonReport() {
+	const results: CommonReport[] = [];
 
-const results: CommonReport[] = [];
-
-fs.createReadStream(
-	process.env.NODE_ENV === "production"
-		? "/home/ubuntu/Comm Report.csv"
-		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/Comm Report.csv",
-)
-	.pipe(csv())
-	.on("data", (data: CommonReport) => results.push(data))
-	.on("end", async () => {
-		try {
-			await db.insert(commonReport).values(
-				results.map((data) => ({
-					sensory: data.Sensory,
-					inwardOutwardOrientation: data["1"],
-					introvertExtrovertTendency: data["2"],
-					styleOfCommunicate: data["Your Style of Communicate"],
-					styleOfLearning: data["Your style of learning"],
-					wayOfDecisionMaking: data["Your way of decision making"],
-				})),
-			);
-			console.log("Common Report inserted successfully");
-		} catch (error) {
-			console.error("Error inserting Common Report:", error);
-		}
-	});
+	fs.createReadStream(`${process.env.DOCUMENTS_PATH}/Comm Report.csv`)
+		.pipe(csv())
+		.on("data", (data: CommonReport) => results.push(data))
+		.on("end", async () => {
+			try {
+				await db.insert(commonReport).values(
+					results.map((data) => ({
+						sensory: data.Sensory,
+						inwardOutwardOrientation: data["1"],
+						introvertExtrovertTendency: data["2"],
+						styleOfCommunicate: data["Your Style of Communicate"],
+						styleOfLearning: data["Your style of learning"],
+						wayOfDecisionMaking: data["Your way of decision making"],
+					})),
+				);
+				console.log("Common Report inserted successfully");
+			} catch (error) {
+				console.error("Error inserting Common Report:", error);
+			}
+		});
+}

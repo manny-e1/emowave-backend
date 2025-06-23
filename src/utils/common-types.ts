@@ -10,6 +10,9 @@ export const ENVOBJ = z.object({
 	NODE_ENV: z.union([z.literal("development"), z.literal("production")]),
 	FRONT_END_URL: z.string(),
 	PORT: z.coerce.number(),
+	DOCUMENTS_PATH: z.string(),
+	PYTHON_DOMAIN: z.string(),
+	SERVER_DOMAIN: z.string(),
 });
 
 export interface ENVOBJ extends z.infer<typeof ENVOBJ> {}

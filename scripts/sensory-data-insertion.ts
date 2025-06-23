@@ -8,27 +8,24 @@ type SensoryData = {
 	Chinese: string;
 	Arabic: string;
 };
+export function insertSensoryData() {
+	const results: SensoryData[] = [];
 
-const results: SensoryData[] = [];
-
-fs.createReadStream(
-	process.env.NODE_ENV === "production"
-		? "/home/ubuntu/All_Sensory_Data.csv"
-		: "/Users/amanueltiruneh/Downloads/work docs/ReferenceData/All_Sensory_Data.csv",
-)
-	.pipe(csv())
-	.on("data", (data: SensoryData) => results.push(data))
-	.on("end", async () => {
-		try {
-			await db.insert(sensoryData).values(
-				results.map((data) => ({
-					sensory: data.Sensory,
-					chinese: data.Chinese,
-					arabic: data.Arabic,
-				})),
-			);
-			console.log("Sensory Data inserted successfully");
-		} catch (error) {
-			console.error("Error inserting Sensory Data:", error);
-		}
-	});
+	fs.createReadStream(`${process.env.DOCUMENTS_PATH}/All_Sensory_Data.csv`)
+		.pipe(csv())
+		.on("data", (data: SensoryData) => results.push(data))
+		.on("end", async () => {
+			try {
+				await db.insert(sensoryData).values(
+					results.map((data) => ({
+						sensory: data.Sensory,
+						chinese: data.Chinese,
+						arabic: data.Arabic,
+					})),
+				);
+				console.log("Sensory Data inserted successfully");
+			} catch (error) {
+				console.error("Error inserting Sensory Data:", error);
+			}
+		});
+}
